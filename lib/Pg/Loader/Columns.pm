@@ -64,6 +64,7 @@ sub combine {
 		 my $h    = $s->{rfm}{$_};
 		 my $val  = $d->{$_};
 		 exists $s->{ "udc_$_"} and $val = $s->{ "udc_$_"};
+		 next unless $h->{ref};
 		 $d->{$_} =  $h->{ref}( $val );
 	} 
 	join $csv->{sep_char},  map { $_ // '' } @{$d}{@col};

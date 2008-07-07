@@ -1,4 +1,9 @@
 Revision history for Perl extension Pg::Loader.
+0.03  Sat Jun 28 16:10:12 2008
+	- Fixed a warning when no pluggins are loaded
+
+0.02  Sat Jun 28 06:50:21 2008
+	- Added user-transformation modules
 
 0.01  Sat Jun 28 16:50:21 2008
 	- original version; created by h2xs 1.23 with options
