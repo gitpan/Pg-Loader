@@ -12,7 +12,7 @@ use List::MoreUtils  qw( firstidx );
 use Log::Log4perl qw( :easy );
 use base 'Exporter';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 our @EXPORT = qw(
 	range2list                  ranges2set	        data_fields
@@ -61,7 +61,10 @@ sub _names2numbers {
 sub combine {
 	my ( $s, $csv, $d, @col )  = @_;
 	for ( @col ) {
-		 exists $s->{ "udc_$_"} and $d->{$_} = $s->{ "udc_$_"}
+		 my $h    = $s->{rfm}{$_};
+		 my $val  = $d->{$_};
+		 exists $s->{ "udc_$_"} and $val = $s->{ "udc_$_"};
+		 $d->{$_} =  $h->{ref}( $val );
 	} 
 	join $csv->{sep_char},  map { $_ // '' } @{$d}{@col};
 }

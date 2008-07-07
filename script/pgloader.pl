@@ -160,8 +160,6 @@ In a table section you can define the following parameters:
  reformat             reformat values of the age column by passing 
                       it to function upper(), in the John::Util module
                       reformat = age:John::Util::upper
-                      [ CURRENTLY UNDER DEVELOPMENT ]
-
 
  copy_every           How many tuples to copy per transaction. 
                       More transactions are automatically created to 

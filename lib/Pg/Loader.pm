@@ -6,7 +6,6 @@ package Pg::Loader;
 use v5.10;
 use DBI;
 use Fatal qw(open);
-use Config::Format::Ini ;
 use Getopt::Compact;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval );
@@ -16,10 +15,9 @@ use Pg::Loader::Query;
 use Pg::Loader::Misc;
 use Pg::Loader::Columns;
 use Log::Log4perl  qw( :easy );
-use Text::CSV;
 use base 'Exporter';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 our @EXPORT = qw( loader  );
 
@@ -63,6 +61,7 @@ sub loader {
 	add_defaults( $ini, $section  )                        ;
 	error_check(  $ini, $section  )                        ;
 	filter_ini(   $ini->{$section}, $dh )                  ;
+	add_modules(  $ini->{$section}, $dh )                  ;
 	my $dry = $conf->{dry_run}                             ;
 
 	my ($file, $format, $null, $table) = 

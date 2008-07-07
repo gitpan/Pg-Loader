@@ -17,13 +17,14 @@ use Quantum::Superpositions ;
 
 
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 our @EXPORT = qw(
 	ini_conf	error_check   	fetch_options   show_sections
 	usage		version		merge_with_template 
 	print_results	l4p_config	add_defaults    subset
 	error_check_pgsql               filter_ini      filter_val
+	add_modules
 );
 our $o;
 sub fetch_options {
@@ -186,6 +187,20 @@ sub filter_ini {
 	DEBUG("\tPassed filter");
 }
 
+sub add_modules {
+	my $s = shift ;
+	return unless $s->{rfm} ;
+	for ( keys %{$s->{rfm}}) {
+		my $h    = $s->{rfm}{$_};
+		my ($pack, $fun) = @{$h}{'pack','fun'};
+		(my $module = $pack) =~ s{::}{\/}o ;
+		$module .= '.pm';
+		require $module ;
+		#say "${pack}::$fun";
+		$h->{ref} = UNIVERSAL::can( $pack, $fun );
+		$h->{ref} or LOGDIE  qq(could not find "${pack}::$fun")  ;
+	}
+}
 sub filter_val {
 }
 
