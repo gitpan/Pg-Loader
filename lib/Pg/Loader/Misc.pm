@@ -17,14 +17,14 @@ use Quantum::Superpositions ;
 
 
 
-our $VERSION = '0.02';
+our $VERSION = '0.04';
 
 our @EXPORT = qw(
 	ini_conf	error_check   	fetch_options   show_sections
 	usage		version		merge_with_template 
 	print_results	l4p_config	add_defaults    subset
-	error_check_pgsql               filter_ini      filter_val
-	add_modules
+	error_check_pgsql               filter_ini    
+	add_modules     
 );
 our $o;
 sub fetch_options {
@@ -42,7 +42,41 @@ sub fetch_options {
 			    [ [qw(  version)],  'version'  , '', \&version    ],
 			    [ [qw(F from)],    'process from this line number'],
 			    [ [qw(i indexes)], 'disable indexes during COPY  '],
+			    [ [qw(g generate)],'generate conf file','!',\&gen ],
 			])->opts;
+}
+sub  gen {
+	(my $tmp = <<EOM ) =~ s/^\t//gmo ;
+	[pgsql]
+	base  = people
+	pass  = apple
+	#host = localhost
+	#pgsysconfdir=.
+	#service=
+
+	[exam]
+	filename      = exam.dat
+	table         = public.exam
+	#copy         = *
+	#copy_columns = id, name
+	#only_cols    = 1-2,4,5
+	#use_template = cvs1
+
+	[cvs1]
+	#template=true
+	#format=cvs
+	#doublequote=false
+	#escapechar=|
+	#quotechar="
+	#skipinitialspace=true
+	#reject_log=rej_log
+	#reject_data=rej_data
+	#reformat= fn:John::Util::jupper, score:John::Util::changed
+	#null=\\NA
+	#trailing_sep=true
+	#copy_every=10000
+EOM
+	print $tmp; exit;
 }
 
 sub l4p_config {
@@ -137,14 +171,57 @@ sub error_check  {
 
         $s->{filename}  or LOGDIE(qq(no filename specified for [$section]));
         $s->{table}     or LOGDIE(qq(no table    specified for [$section]));
+        _check_copy( $s->{copy} );
 	DEBUG("\tPassed error check");
 }
+sub _check_copy {
+        my $values = shift||return;
+        # $s->copy should be either a '*' string, or an array of
+        # string in the form of  \w(:\d+) . Whitespaces will be cut.
+	my $err = 'invadid value for param "copy"' ;
+
+        if (ref $values eq 'ARRAY') {
+		# array of arrayref
+        	my $max =  $#{$values};
+		my $pat =  qr/^\s*\w+(?:\s*[:]\s*\d+)?/   ;
+            	($max+1) == grep { LOGDIE  $err  unless $_;
+				   LOGDIE  $err  unless $_=~ $pat;
+                                 } @$values  or  LOGDIE $err;
+	}else{
+		# assume it is string, big assumption
+		my $_   =  $values ;
+		my $pat =  qr/^ \s* \w+ (?:[:]1)? \s* $/xo;
+		LOGDIE $err unless (/^ \s* [*] \s* $/xo  or $_=~ $pat );
+	}
+	# passed 
+}
+
 sub subset {
 	my ($h,$n) = @_ ;
         # True if $n is subset of $h;
         my @intersection = eigenstates(all( any(@$h), any(@$n) ));
 	(@intersection == @$n);
 }
+sub _copy_param {
+        my $values = shift;
+        # receives a array of strings like [qw(a:1 b c:4 d:3)] and returns
+        # an arrayref of ordered columns: [q( a b d c )]
+        return if $values =~ /^ \s* [*] \s* $/xo;
+
+        (ref $values eq 'ARRAY') or  $values = [$values];
+
+        my  ($max, $last, @ret) = ($#{$values}, 0);
+        for (@$values) {
+                s/^\s*|\s*$//og;
+                my ($name, $num) =  split /\s*:\s*/, $_;
+                $num //= $last+1;
+                $last = $num;
+                $ret[$num-1] = $name ;
+        }
+        LOGDIE "invalid values for copy param"  unless $#ret == $max;
+        \@ret;
+}
+
 
 sub filter_ini {
 	my ($s, $dh) = @_ ;
@@ -154,8 +231,9 @@ sub filter_ini {
 
         my $attributes = [ get_columns_names( $dh, $s->{table}, $s ) ];
 
-        # $s->{copy} might be an arrayref
-	$s->{copy}        =~ /^\s*[*]\s*$/ox and $s->{copy}       = $attributes;
+	$s->{copy}  =  ($s->{copy}=~/^\s*[*]\s*$/ox) ?  $attributes 
+                                                     : _copy_param $s->{copy};
+
 	($s->{copy_columns}||'') =~/^\s*[*]\s*$/ox 
                                              and $s->{copy_columns}=$attributes;
 
@@ -200,8 +278,6 @@ sub add_modules {
 		$h->{ref} = UNIVERSAL::can( $pack, $fun );
 		$h->{ref} or LOGDIE  qq(could not find "${pack}::$fun")  ;
 	}
-}
-sub filter_val {
 }
 
 sub show_sections {

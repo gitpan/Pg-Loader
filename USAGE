@@ -27,6 +27,7 @@ OPTIONS
      -d                         debug  mode     (same as loglevel=4)
      -l,  --loglevel            set loglevel 1 to 4  . Defaults to 2
      -c,  --config              configuration file; defaults to "pgloader.conf"
+     -g,  --generate            generate a sample configuration file
      -i,  --indexes             disable indexes during COPY
      -n,  --dry_run             dry_run
      -s,  --summary             show summary
@@ -74,60 +75,68 @@ CONFIGURATION FILE
         of the table. In a table section you can define the following
         parameters:
 
-         filename             filename with data for the table       [mandatory]
+         filename          filename with data for the table       [mandatory]
 
-         table                [Mandatory]  tablename or use schema.tablename. 
-                              Defaults to section name               [mandatory]
+         table             [Mandatory]  tablename or use schema.tablename. 
+                           Defaults to section name               [mandatory]
 
-         use_template         template to use for default values      [optional]
+         use_template      template to use for default values      [optional]
 
-         field_sep            Delimiter that separates fields. The default for
-                              text formats is TAB, and for csv formats is ',' 
+         field_sep         Delimiter that separates fields. The default for
+                           text formats is TAB, and for csv formats is ',' 
 
-         format               must be either 'text' or 'csv' (without the 
-                              quotes).  Default is text.
+         format            must be either 'text' or 'csv' (without the 
+                           quotes).  Default is text.
 
-         copy_columns         names of columns to use for COPY.       [optional]
-                              The char '*' means all columns, but since this is 
-                              also the default you may as well leave it blank
-                              Example:  copy_columns = first, last, age
-                                        copy_columns = *
+         copy_columns      names of columns to use for COPY.       [optional]
+                           The char '*' means all columns, but since this is 
+                           also the default you may as well leave it blank
+                           Example:  copy_columns = first, last, age
+                                     copy_columns = *
 
-         only_cols            which column numbers to COPY ; counting [optional]
-                              starts from 1. The char '*' means all columns, but 
-                              since this is also the default you may as well 
-                              leave it blank. Example: only_cols = 1-2, 3, 5
-                                                       only_cols = 3
+         only_cols         which column numbers to COPY ; counting [optional]
+                           starts from 1. The char '*' means all columns, but 
+                           since this is also the default you may as well 
+                           leave it blank. Example: only_cols = 1-2, 3, 5
+                                                    only_cols = 3
 
-         quotechar            Usefull only for csv formats. Default is "
+         quotechar         Usefull only for csv formats. Default is "
 
-         null                 String that designates a NULL value ; 
-                              usefull only for text mode. Default is string '\NA'
+         null              String that designates a NULL value ; 
+                           usefull only for text mode. Default is string '\NA'
 
-         skipinitialspace     when defined, we ignore leading and trailing 
-                              whitespace
+         skipinitialspace  when defined, we ignore leading and trailing 
+                           whitespace
 
-         udc_COLUMNAME        assign this value for all rows of column COLUMNAME
-                              Examples: udc_title = Sir 
+         udc_COLUMNAME    assign this value for all rows of column COLUMNAME
+                          Examples: udc_title = Sir 
                                         udc_age   = 99 
                                         udc_race  = white
 
-         reformat             reformat values of the age column by passing 
-                              it to function upper(), in the John::Util module
-                              reformat = age:John::Util::upper
+         reformat         reformat values of the age column by passing 
+                          it to function upper(), in the John::Util module
+                          reformat = age:John::Util::upper
 
-         copy_every           How many tuples to copy per transaction. 
-                              More transactions are automatically created to 
-                              insert the rest of the date, each inserting
-                              upto that many tuples. Defaults is 10_000
+	 copy             names of columns found in data file    [optional]
+                          Defauls to * , which uses the same column order found
+                          in the table definition inside postgres. Useful when
+                          your file contains data in different order.
+                          Example:  copy = age, last, first
+                                    copy = first:3, age:1, last:2
+
+         copy_every       How many tuples to copy per transaction. 
+                          More transactions are automatically created to 
+                          insert the rest of the date, each inserting
+                          upto that many tuples. Defaults is 10_000
 
         NOTE: Because of how the ini format is defined as a value separator,
         if you need to include the , char, you must escape it with \ . For
         example: field_sep = \, sets field_sep to char ','
 
 SEE ALSO
-    http://pgfoundry.org/projects/pgloader/ hosts the original python
-    project.
+    http://pgfoundry.org/projects/pgloader/ hosts the official python
+    project.  This project has nothing to do with this Perl program.
+
 
 AUTHOR
     Ioannis Tambouras, <ioannis@cpan.org>

@@ -65,6 +65,7 @@ read further to find what is currently available.
  -d                         debug  mode     (same as loglevel=4)
  -l,  --loglevel            set loglevel 1 to 4  . Defaults to 2
  -c,  --config              configuration file; defaults to "pgloader.conf"
+ -g,  --generate            generate a sample configuration file
  -i,  --indexes             disable indexes during COPY
  -n,  --dry_run             dry_run
  -s,  --summary             show summary
@@ -133,6 +134,13 @@ In a table section you can define the following parameters:
  format               must be either 'text' or 'csv' (without the quotes)
                       Default is text.
 
+ copy                 names of columns found in data file        [optional]
+                      Defauls to * , which uses the same column order found
+                      in the table definition inside postgres.  Useful when
+                      your file contains data in different order.
+	              Example:  copy = age, last, first
+                                copy = first:3, age:1, last:2
+
  copy_columns         names of columns to use for COPY.          [optional]
 	              The char '*' means all columns, but since this is 
                       also the default you may as well leave it blank
@@ -176,8 +184,8 @@ example:
 
 =head1 SEE ALSO
 
-http://pgfoundry.org/projects/pgloader/  hosts the original python
-project.
+http://pgfoundry.org/projects/pgloader/  hosts the official python
+project. This project has nothing to do with this Perl program.
 
 
 =head1 AUTHOR

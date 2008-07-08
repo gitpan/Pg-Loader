@@ -15,7 +15,7 @@ use Pg::Loader::Columns;
 use Data::Dumper;
 use Text::CSV;
 
-our $VERSION = '0.02';
+our $VERSION = '0.04';
 
 our @EXPORT = qw(
 	connect_db	column_names_str   get_columns_names

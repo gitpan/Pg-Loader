@@ -1,4 +1,10 @@
 Revision history for Perl extension Pg::Loader.
+
+0.04  Sat Jul 8 04:43:28 2008
+	- added the -g option , which generates a sample configuration file
+	- added support for the "copy" parameter
+	- More error checks.
+
 0.03  Sat Jun 28 16:10:12 2008
 	- Fixed a warning when no pluggins are loaded
 

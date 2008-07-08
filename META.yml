@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Pg-Loader
-version:             0.03
+version:             0.04
 abstract:            Perl extension for loading Postgres tables
 license:             ~
 author:              

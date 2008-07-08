@@ -5,7 +5,7 @@
 #   02_range2list     		03_schema_name.t      04_query_basic.t
 #   05_field_nums_reqe.t        06_requested_cols.t       
 #   10_simplify_ini.t           11_ini_conf.t         12_error_check.t
-#   13_subset.t
+#   13_subset.t                 14_check_copy.t       15_copy_param.t
 #   20_disable_indexes.t        21_enable_indexes.t
 #   31_add_defaults.t           32_filter_ini.t
  
@@ -13,10 +13,10 @@ MODULES  =  -MData::Dumper -MCarp
 MODULES +=  -MTest::More   -Mblib=../blib -Mv5.10 
 
 #all: 01c_coverage.t
-#all: 12_error_check.t
-#all: 12_error_check.t
+#all: 14_copy_param.t
+all: 15_copy_param.t
 #all: 32_filter_ini.t
-all: 06_requested_cols.t
+#all: 06_requested_cols.t
 
 3* 2* 1* 0*:
 	perl -w -Mstrict -Mblib  $(MODULES)   $@  
