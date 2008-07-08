@@ -17,12 +17,12 @@ use Pg::Loader::Columns;
 use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 our @EXPORT = qw( loader  );
 
 sub every {
-	my ($s, $dh, $col, $csv, $fd, $conf, @col) = @_;
+	my ($s, $dh, $col, $csv, $fd, $conf, $defs, @col) = @_;
 	my ( $format, $null, $table) = @{$s}{'format','null','table'};
 	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} );
 
@@ -42,10 +42,11 @@ sub every {
 		DEBUG( "\t\t$_" )                                 ;
 		$rows += $dh->pg_putcopydata("$_\n") unless $dry  ;
 	}
-	if (! $dry) {
-		$dh->pg_putcopyend() 
-			? $dh->commit 
-			: do { $dh->rollback; $errors++; $rows=0} ;
+	if ((! $dry) and $dh->pg_putcopyend() ) {
+                enable_indexes( $dh, $table, $defs )  if $conf->{indexes};
+		$dh->commit ;
+	}else{
+		$dh->rollback; $errors++; $rows=0 ;
 	}
 	($rows, $errors//0, $data);
 }
@@ -74,36 +75,35 @@ sub loader {
 	my ($t0, $rows, $errors, $data) =  ([gettimeofday], 0, 0,'true')  ;
 
 	INFO("\tLoading for $section");
-	unless ( $dry ) {
-		$dh->begin_work;
-		if ($conf->{truncate}) {
-			INFO("\tTruncating $table")                ;
-			$dh->do("truncate $table")   unless $dry   ;
-		}
-		if ($conf->{disable_triggers}) {
-			DEBUG( "\tDisabling triggers")             ;
-			$dh->do( <<"")                unless $dry  ;
-			ALTER TABLE $table DISABLE TRIGGER ALL
+	if ($conf->{truncate}) {
+		INFO("\tTruncating $table")                ;
+		$dh->do("truncate $table")   unless $dry   ;
+	}
+	if ($conf->{disable_triggers}) {
+		DEBUG( "\tDisabling triggers")             ;
+		$dh->do( <<"")                unless $dry  ;
+		ALTER TABLE $table DISABLE TRIGGER ALL
 
-		}
-		if ($conf->{indexes}) {
- 			my $defs = disable_indexes( $dh, $table ) unless $dry  ;
- 			enable_indexes( $dh, $table, $defs )      unless $dry  ;
-		}
+	}
+	my $defs;
+	if ($conf->{indexes}) {
+		 $defs = disable_indexes( $dh, $table ) unless $dry  ;
+	}
 
-		while ( 1 ) {
-			($rows, $errors, $data)= 
-			       every($s, $dh, $col, $csv, $fd, $conf, @col);
-			last unless $data                                  ;
-			last if stop_input($conf, $rows//0)                ;
-		}
-		if ($conf->{vacuum}) {
-			INFO("\tVacuum analyze $table")               ;
-			$dh->do("vacuum analyze $table")  unless $dry ;
-		}
+	while ( 1 ) {
+		($rows, $errors, $data)= 
+		       every($s, $dh, $col, $csv, $fd, $conf, $defs, @col);
+		last unless $data                                         ;
+		last if stop_input($conf, $rows//0)                       ;
+	}
+
+	$dh->{ AutoCommit } = 1;
+	if ($conf->{vacuum}) {
+		INFO("\tVacuum analyze $table")               ;
+		$dh->do("vacuum analyze $table")  unless $dry ;
 	}
 	{ name => $section, elapsed => tv_interval($t0), 
-          rows => $rows,     errors => $errors 
+	  rows => $rows,     errors => $errors 
         }
 }
 
