@@ -20,7 +20,7 @@ t/01b_pod.t
 t/01c_coverage.t
 t/02_range2list.t
 t/03_schema_name.t
-t/04_query_basic.t
+t/04_get_columns_names.t
 t/05_field_nums_reqe.t
 t/06_requested_cols.t   
 t/11_ini_conf.t
@@ -28,9 +28,10 @@ t/12_error_check.t
 t/13_subset.t
 t/14_ckeck_copy.t   
 t/15_copy_param.t  
+t/16_combine.t
 t/20_disable_indexes.t
 t/21_enable_indexes.t
-t/06_requested_cols.t   
+t/22_stop_input.t
 t/31_add_defaults.t
 t/32_filter_ini.t
 t/data/likes.dat

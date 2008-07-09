@@ -5,7 +5,6 @@ my $dir  = $ENV{PWD} =~ m#\/t$#  ? '' : 't/';
 
 
 *ini_conf    = \& Pg::Loader::Misc::ini_conf;
-*error_check = \& Pg::Loader::Misc::error_check;
 
 my $h = { pgsql => { base => undef, host => 'localhost' },
           cvs1  => { null => 'na' } 

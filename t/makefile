@@ -2,7 +2,7 @@
 .SILENT: 
 
 #   00_load.t         		01b_pod.t             01c_coverage.t  
-#   02_range2list     		03_schema_name.t      04_query_basic.t
+#   02_range2list     		03_schema_name.t      04_get_columns_names.t
 #   05_field_nums_reqe.t        06_requested_cols.t       
 #   10_simplify_ini.t           11_ini_conf.t         12_error_check.t
 #   13_subset.t                 14_check_copy.t       15_copy_param.t
@@ -14,7 +14,8 @@ MODULES +=  -MTest::More   -Mblib=../blib -Mv5.10
 
 #all: 01c_coverage.t
 #all: 14_copy_param.t
-all: 15_copy_param.t
+all: 16_combine.t
+#all: 22_stop_input.t
 #all: 32_filter_ini.t
 #all: 06_requested_cols.t
 

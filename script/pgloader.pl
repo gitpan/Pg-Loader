@@ -50,7 +50,7 @@ to pgloader.dat).
 This version of pgloader exhibits the -i option which (when activated)
 drops all table indexes and recreates them again after COPY.  In case of 
 errors, everything rolls back to the initial state. This version also
-allows the libpg 'service' database connection method.
+allows the libpq 'service' database connection method.
 
 The configuration file and command options are almost identical to the 
 python pythod pgloader(1) and is meant to be a drop-in replacement. 

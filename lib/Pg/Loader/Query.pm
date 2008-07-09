@@ -18,8 +18,8 @@ use Text::CSV;
 our $VERSION = '0.04';
 
 our @EXPORT = qw(
-	connect_db	column_names_str   get_columns_names
-	disable_indexes enable_indexes
+	connect_db	  get_columns_names
+	disable_indexes   enable_indexes      vacuum_analyze 
 );
 
 sub connect_db {
@@ -41,6 +41,13 @@ sub connect_db {
                      PrintError => 0 , Profile           => 0,
 		   };
         DBI->connect( $dsn, $user // getlogin,$pass,$att) or die $DBI::errstr;
+}
+
+sub vacuum_analyze {
+        my ($dh, $table, $dry) = @_  ;
+        $dh->{ AutoCommit } = 1;
+        INFO("\tVacuum analyze $table")               ;
+        $dh->do("vacuum analyze $table")  unless $dry ;
 }
 
 sub disable_indexes {
@@ -90,9 +97,6 @@ sub schema_name {
 	( $schema, $table );
 }
 
-sub _get_columns_hash {
-	# map column_name -> ordinal_position
-}
 
 sub get_columns_names {
         # return ordered list of culumn names
@@ -106,38 +110,6 @@ sub get_columns_names {
 
         my $h = $st->fetchall_arrayref;
         map { ${$_}[0] }   @$h ;
-}
-
-
-sub all_column_names_str {
-        my ( $dh, $table) = @_ ;
-	my @names = get_columns_names ($dh, $table);
-	'('. join( ', ', @names) . ')' ;
-}
-
-sub column_names_str {
-        my ( $dh, $table, $s) = @_ ;
-	#if ($s->{copy_columns} ) {
-	if ($s->{opy_columns} ) {
-		my @cols = @{$s}{copy_columns} ;
-		return '('. join( ', ', @cols) . ')' ;
-
-		#while ( my( $k,$v) = each %$s) {
-			#next unless $k =~ /^udc_/;
-			#my (undef,$name) = split /udc_/i, $k ;
-	                #next unless  grep {$name} @cols  ;
-			#say $name;
-		#}
-		print Dumper @cols ; exit;
-	}elsif ($s->{only_cols}){
-		my @cols   = get_columns_names($dh, $table);
-		my $r      = range2list( '1-2' );  #TODO: is hardcoded
-		{ $[=1; no warnings; @cols =  eval '@cols['.$r.']' }
-		return '('. join( ', ', @cols) . ')' ;
-	}else{
-		my @cols = get_columns_names ($dh, $table);
-		return '('. join( ', ', @cols) . ')' ;
-	}
 }
 
 

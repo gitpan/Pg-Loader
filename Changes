@@ -1,12 +1,17 @@
 Revision history for Perl extension Pg::Loader.
 
-0.05  Tue Jul  8 06:32:16 EDT 2008
+0.06  Wed Jul  9 04:23:11 2008
+	- More regression tests using DBD::Mock
+	- Minor refactoring
+	- fix udc substitutions
+
+0.05  Tue Jul  8 06:32:16 2008
 	- fixed vacuum analyze
 	- enabled index drop and recreation at the right place
 	- added forgotten regression tests
 
 0.04  Tue Jul 8 04:43:28 2008
-	- added the -g option , which generates a sample configuration file
+	- added the -g option which generates a sample configuration file
 	- added support for the "copy" parameter
 	- More error checks.
 
@@ -14,9 +19,8 @@ Revision history for Perl extension Pg::Loader.
 	- Fixed a warning when no pluggins are loaded
 
 0.02  Mon Jul 7 06:50:21 2008
-	- Added user-transformation modules
+	- Added user value-transformation modules
 
 0.01  Sat Jun 28 16:50:21 2008
 	- original version; created by h2xs 1.23 with options
 		-AXn Pg::Loader
-
