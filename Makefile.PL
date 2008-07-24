@@ -1,9 +1,9 @@
 use v5.10;
 use ExtUtils::MakeMaker;
 
-
 WriteMakefile(
     PL_FILES          => {},
+    LICENSE           => 'perl',
     NAME              => 'Pg::Loader',
     VERSION_FROM      => 'lib/Pg/Loader.pm',
     PREREQ_PM         => { 

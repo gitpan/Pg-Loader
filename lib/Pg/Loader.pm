@@ -17,7 +17,7 @@ use Pg::Loader::Columns;
 use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 our @EXPORT = qw( loader  );
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension Pg::Loader.
 
+0.07  Wed Jul 23 21:48:23 2008
+	- Fixed license entry (to perl)
+
 0.06  Wed Jul  9 04:23:11 2008
 	- More regression tests using DBD::Mock
 	- Minor refactoring

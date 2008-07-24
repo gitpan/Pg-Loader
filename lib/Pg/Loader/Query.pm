@@ -45,9 +45,15 @@ sub connect_db {
 
 sub vacuum_analyze {
         my ($dh, $table, $dry) = @_  ;
-        $dh->{ AutoCommit } = 1;
-        INFO("\tVacuum analyze $table")               ;
-        $dh->do("vacuum analyze $table")  unless $dry ;
+        local $dh->{ AutoCommit } = 1;
+        local $dh->{ RaiseError } = 0;
+        local $dh->{ PrintError } = 0;
+	my ($msg, $rv)  = ("\tVacuum analyze $table", 1);
+	unless ($dry) { 
+		$rv  = $dh->do("VACUUM ANALYZE $table") ; 
+	}
+	INFO $rv//'' ? $msg : $msg . '.....FAILED' ;
+	$rv;
 }
 
 sub disable_indexes {

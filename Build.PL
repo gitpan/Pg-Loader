@@ -30,6 +30,3 @@ my $b= Module::Build->new(
 );
 
 $b->create_build_script;
-
-#print  "\nIt takes 2 seconds. This time read the README file!\n\n";
-
