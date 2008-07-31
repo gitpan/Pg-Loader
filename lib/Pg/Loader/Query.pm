@@ -12,6 +12,7 @@ use base 'Exporter';
 use Config::Format::Ini;
 use Log::Log4perl qw( :easy );
 use Pg::Loader::Columns;
+use Pg::Loader::Misc;
 use Data::Dumper;
 use Text::CSV;
 
