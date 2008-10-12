@@ -5,7 +5,7 @@ use Test::MockDBI;
 use Pg::Loader::Misc;
 use Test::Exception;
 
-#*get_columns_names = \&Pg::Loader::Query::get_columns_names;
+*get_columns_names = \& Pg::Loader::Query::get_columns_names;
 *filter_ini        = \& Pg::Loader::Misc::filter_ini ;
 
 my $dh = DBI->connect( '$dsn', '','');

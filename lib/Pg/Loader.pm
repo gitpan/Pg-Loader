@@ -17,7 +17,7 @@ use Pg::Loader::Columns;
 use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 our @EXPORT = qw( loader  );
 
@@ -69,8 +69,9 @@ sub loader {
 	my ($file, $format, $null, $table) = 
                     @{$s}{'filename','format','null','table'};
 	my ($col, @col) = requested_cols( $s )               ;
-	open my ($fd), $file                                 ;
 	INFO("\tReading from $file")                         ;
+	my $fd = \* STDIN                                    ;
+	open $fd, $file           unless  $file=~/^STDIN$/i  ;
 	my $csv = init_csv( $s )                             ;
 	$csv->column_names( @{$s->{copy}}  )                 ;
 	my ($t0, $rows, $errors, $data) =  ([gettimeofday], 0, 0,'true')  ;

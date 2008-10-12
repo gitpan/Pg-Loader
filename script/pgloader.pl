@@ -121,7 +121,10 @@ the corresponding table section defines how to load this table.
 Try to keep the name of the section the same as the name of the table.
 In a table section you can define the following parameters:
 
- filename             filename with data for the table         [mandatory]
+ filename             filename with data for the table         [optional]
+	              If missing, or set to 'STDIN', input data should
+                      arrive from standard input.
+                       
 
  table                [Mandatory]  tablename or use schema.tablename. 
                       Defaults to section name                 [mandatory]
@@ -173,6 +176,9 @@ In a table section you can define the following parameters:
                       More transactions are automatically created to 
                       insert the rest of the date, each inserting
                       upto that many tuples. Defaults is 10_000
+                      TIP: set this parameter to 1 if you wish
+                      to avoid the case where one bad tuple
+                      cause other tuples to also fail.
 
 NOTE: Because of how the ini format is defined as a value separator,
 if you need to include the , char, you must escape it with \ . For

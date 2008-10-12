@@ -32,7 +32,7 @@ is_deeply [ sort keys %{$m->{apple}} ] , $fields ;
 is scalar (values %{$m->{apple}}), @$fields; 
 
 is_deeply [ @{$mm}{qw( copy copy_every filename      format table)}],
-	  [        qw( *    10000      pgloader.dat text    apple)];
+	  [        qw( *    10000      STDIN         text    apple)];
 
 is   $bb->{ null }  ,  'NULL as $$\NA$$' ;
 is   $mm->{ null }  ,  'NULL as $$\NA$$' ;

@@ -1,11 +1,11 @@
 --- #YAML:1.0
 name:                Pg-Loader
-version:             0.08
+version:             0.09
 abstract:            Perl extension for loading Postgres tables
 license:             perl
 author:              
     - Ioannis Tambouras <ioannis@cpan.org>
-generated_by:        ExtUtils::MakeMaker version 6.44
+generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
     Config::Format::Ini:           0.05

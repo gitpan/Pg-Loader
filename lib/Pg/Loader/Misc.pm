@@ -1,3 +1,4 @@
+
 # Copyright (C) 2008 Ioannis Tambouras <ioannis@cpan.org>. All rights reserved.
 # LICENSE:  GPLv3, eead licensing terms at  http://www.fsf.org .
 
@@ -9,12 +10,13 @@ use strict;
 use warnings;
 use Config::Format::Ini;
 use Text::CSV;
-use Pg::Loader::Query;
+use Pg::Loader::Columns;
 use List::MoreUtils  qw( firstidx );
 use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 use Quantum::Superpositions ;
 
+*get_columns_names = \&Pg::Loader::Query::get_columns_names;
 
 
 our $VERSION = '0.04';
@@ -33,6 +35,7 @@ sub fetch_options {
                 modes  => [qw(quiet debug verbose )],
 		struct => [ [ [qw(c config)],  'config file', '=s'            ],
                             [ [qw(s summary)], 'summary'                      ],
+                            [ [qw(t table)], 'schema.table'                   ],
 			    [ [qw(n dry_run)], 'dry_run'                      ],
 			    [ [qw(l loglevel)],'loglevel', '=i'               ],
 			    [ [qw(D disable_triggers)],'disable triggers'     ],
@@ -141,7 +144,7 @@ sub add_defaults {
         $s->{null} = 'NULL as $$'.($s->{null} //'\NA') .'$$'        ;
 	$s->{ copy       }   //= '*'                                ;  
 	$s->{ copy_every }   //=  10_000                            ;
-        $s->{ filename   }   //=  'pgloader.dat'                    ;
+        $s->{ filename   }   //=  'STDIN'                           ;
         $s->{ format     }   //=  'text'                            ;
         $s->{ null       }   //=  '$$\NA$$'                         ;
         $s->{ table      }   //=   $section                         ;

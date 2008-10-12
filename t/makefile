@@ -15,8 +15,8 @@ MODULES +=  -MTest::More   -Mblib=../blib -Mv5.10
 
 #all: 01c_coverage.t
 #all: 14_copy_param.t
-#all: 16_combine.t
-all: 40_kwalitee.t
+all: 16_combine.t
+#all: 40_kwalitee.t
 #all: 32_filter_ini.t
 #all: 06_requested_cols.t
 
