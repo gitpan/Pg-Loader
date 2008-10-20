@@ -1,0 +1,13 @@
+* allow for datestyle, lc_numeric, etc,.          DONE
+* should take data from STDIN                     DONE
+* test lc_numeric
+* in filter_ini() , allow for custom column names when checking for 
+  valid column names. 
+* if pgloader.pl already has the following features, then Document them!
+* make manpage more infomative, add contents of USAGE area?
+* can the present pgloader.pl parse (unquoted) space-delimited data?
+* show why the commit failed
+* show which entries failed
+* should have command-line to change table, infile, etc,.
+* should have to option to continue if some data are rejected. This
+  essentially needs a command option for copy_every = 1

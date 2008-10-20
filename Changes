@@ -1,5 +1,16 @@
 Revision history for Perl extension Pg::Loader.
 
+0.10  Mon Oct 20 01:09:58 2008
+        - Added lc_messages, datestyle, and client_encoding 
+	- Fixed 'copy" and "copy_only" to work with variable
+          number or input columns.
+        - Added preliminary work for buldk updates. 
+          Not finished, not documentated
+        - Minor documentation enhancements
+        - Minor error checking enhancements
+        - Minor presentation enhancements
+	- Added a TODO file
+
 0.09  Sun Oct 12 16:52:42 2008
 	- data can now arrive from stdin
 

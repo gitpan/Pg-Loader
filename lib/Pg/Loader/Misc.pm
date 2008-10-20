@@ -19,13 +19,13 @@ use Quantum::Superpositions ;
 *get_columns_names = \&Pg::Loader::Query::get_columns_names;
 
 
-our $VERSION = '0.04';
+our $VERSION = '0.10';
 
 our @EXPORT = qw(
 	ini_conf	error_check   	fetch_options   show_sections
 	usage		version		merge_with_template 
 	print_results	l4p_config	add_defaults    subset
-	error_check_pgsql               filter_ini    
+	error_check_pgsql               filter_ini      reformat_values
 	add_modules     
 );
 our $o;
@@ -35,7 +35,8 @@ sub fetch_options {
                 modes  => [qw(quiet debug verbose )],
 		struct => [ [ [qw(c config)],  'config file', '=s'            ],
                             [ [qw(s summary)], 'summary'                      ],
-                            [ [qw(t table)], 'schema.table'                   ],
+                            [ [qw(t table)],   'schema.table'                 ],
+			    [ [qw(u update)],  'update'                       ],
 			    [ [qw(n dry_run)], 'dry_run'                      ],
 			    [ [qw(l loglevel)],'loglevel', '=i'               ],
 			    [ [qw(D disable_triggers)],'disable triggers'     ],
@@ -64,6 +65,7 @@ sub  gen {
 	#copy_columns = id, name
 	#only_cols    = 1-2,4,5
 	#use_template = cvs1
+	#copy_every=10000
 
 	[cvs1]
 	#template=true
@@ -77,7 +79,11 @@ sub  gen {
 	#reformat= fn:John::Util::jupper, score:John::Util::changed
 	#null=\\NA
 	#trailing_sep=true
-	#copy_every=10000
+	#datestyle=euro
+	#client_encoding=
+	#lc_messages=
+	#lc_numeric=
+
 EOM
 	print $tmp; exit;
 }
@@ -107,23 +113,15 @@ sub l4p_config {
 
 
 sub ini_conf {
-         $Config::Format::Ini::SIMPLIFY = 1;
-         my $ini = read_ini shift||'pgloader.conf';
+	$Config::Format::Ini::SIMPLIFY = 1;
+	my $file = shift ||'pgloader.conf';
+        INFO( "Configuring from $file" );
+	my $ini = read_ini $file ;
 }
 
 sub usage   { say $o->usage() and exit }
 sub version { say $VERSION    and exit }
 
-sub merge_with_template {
-        my ( $ini, $section) = @_;
-	$ini->{$section} || LOGDIE(qq(no config section for [$section]));
-        my $template = $ini->{$section}{use_template} || return;
-        return unless $ini->{$template}{template};
-        DEBUG( "\tFound template for $section"  );
-        while (my($k,$v) = each %{$ini->{$template}}) {
-                $ini->{$section}{$k} //= $v ;
-        }
-}
 
 sub print_results {
         my @stats = shift || return;
@@ -134,21 +132,36 @@ sub print_results {
           $_->{name}, $_->{elapsed}, '-', $_->{rows}, $_->{errors}  for @stats;
 }
 
+sub merge_with_template {
+        ## Output: add columns into $s
+        my ( $s, $ini, $template) = @_;
+	return                                 unless $template;
+	LOGDIE "Missing template [$template]"  unless $ini->{$template};
+        $s->{$_} //= $ini->{$template}{$_}     for  keys %{$ini->{$template}};
+}
+
 sub add_defaults {
 	my ( $ini, $section) = @_ ;
-	my $s      =  $ini->{$section}                       ;
-	LOGDIE "invalid section name"  unless $section       ;
-	LOGDIE "missing [$section]"    unless $s             ;
+	LOGDIE "invalid section name"              unless $section    ;
+	my $s      =  $ini->{$section}                                ;
+	LOGDIE "Missing section [$section]"        unless $s          ;
+        merge_with_template( $s, $ini, $s->{use_template} ) ;
 
-        merge_with_template( $ini, $section )                ;
-        $s->{null} = 'NULL as $$'.($s->{null} //'\NA') .'$$'        ;
-	$s->{ copy       }   //= '*'                                ;  
-	$s->{ copy_every }   //=  10_000                            ;
-        $s->{ filename   }   //=  'STDIN'                           ;
-        $s->{ format     }   //=  'text'                            ;
-        $s->{ null       }   //=  '$$\NA$$'                         ;
-        $s->{ table      }   //=   $section                         ;
-	$s->{ quotechar  }   //=  '"'                               ;
+        $s->{null} = 'NULL as $$'.($s->{null} //'\NA') .'$$'         ;
+	$s->{ copy        }   //= '*'                                ;  
+	$s->{ copy_every  }   //=  10_000                            ;
+        $s->{ filename    }   //=  'STDIN'                           ;
+        $s->{ format      }   //=  'text'                            ;
+        $s->{ null        }   //=  '$$\NA$$'                         ;
+        $s->{ table       }   //=   $section                         ;
+	$s->{ quotechar   }   //=  '"'                               ;
+	$s->{ lc_messages }   //=   ''                               ;
+	$s->{ lc_numeric  }   //=   ''                               ;
+	$s->{ datestyle   }   //=   ''                               ;
+	$s->{ client_encoding } //= ''                               ;
+
+	$s->{copy_columns} = $s->{copy} 
+                        unless ($s->{only_cols}||$s->{copy_columns});
 
         my $is_text =  $s->{ format } =~ /^ '? text '?$/ox          ;
         $s->{ field_sep  }   //=  $is_text ? "\t" : ','             ;
@@ -157,31 +170,39 @@ sub add_defaults {
 
 sub error_check_pgsql  {
 	my  ($conf, $ini) = @_ ;
-	my $s = $ini->{pgsql} || LOGDIE(qq(no pgsql section ));
+	my $s = $ini->{pgsql} || LOGEXIT(qq(Missing pgsql section ));
 	if ($s->{pgsysconfdir} || $ENV{ PGSYSCONFDIR } ) {
-		my $msg = 'expected service parameter in pgsql section';
+		my $msg = 'Expected service parameter in pgsql section';
 		$s->{service} or LOGDIE ( $msg ) ;
 	}
 	$conf->{dry_run} //= 0;
 }
 
 sub error_check  {
+	
 	my ( $ini, $section) = @_;
 	die unless $section;
-	my $s = $ini->{$section}|| LOGDIE(qq(no config section for [$section]));
-        my $msg01 = q("copy_columns" and "only_cols" are both defined);
-        $s->{copy_columns} and $s->{only_cols} and LOGDIE( $msg01 ) ;
+	my $s = $ini->{$section}|| LOGDIE(qq(No config section for [$section]));
+        my $msg01 = q("copy_columns" and "only_cols" are mutually exclusive);
+        $s->{copy_columns} and $s->{only_cols} and LOGEXIT( $msg01 ) ;
 
-        $s->{filename}  or LOGDIE(qq(no filename specified for [$section]));
-        $s->{table}     or LOGDIE(qq(no table    specified for [$section]));
-        _check_copy( $s->{copy} );
-	DEBUG("\tPassed error check");
+        $s->{filename}  or LOGEXIT(qq(No filename specified for [$section]));
+        $s->{table}     or LOGEXIT(qq(No table specified for [$section]));
+        $s->{table}     or LOGEXIT(qq(No table specified for [$section]));
+	$s->{format} =~  s/^ \s*'|'\s* $//xog;
+        $s->{format}    or LOGEXIT(qq(No format specified for [$section]));
+	given ($s->{format} ) {
+		when (/^(text|csv)$/)  {} ;
+		default   { LOGEXIT( q(Set format to either 'text' or 'csv'))};
+	}; 
+        _check_copy_grammar( $s->{copy} );
+	DEBUG("\tPassed grammar check");
 }
-sub _check_copy {
+sub _check_copy_grammar {
         my $values = shift||return;
         # $s->copy should be either a '*' string, or an array of
-        # string in the form of  \w(:\d+) . Whitespaces will be cut.
-	my $err = 'invadid value for param "copy"' ;
+        # string in the form of  \w(:\d+) . Whitespaces are trimed.
+	my $err = 'Invadid value for param "copy"' ;
 
         if (ref $values eq 'ARRAY') {
 		# array of arrayref
@@ -227,45 +248,57 @@ sub _copy_param {
 
 
 sub filter_ini {
+        # Checks if configuration values are sensible. 
+	# Assumption: The configuration syntax obeys grammar
+	# Output: records real table attributes to $s->{attributes}
+	# Output: "copy" and "copy_columns" become arrayrefs
+	#TODO: parameters for "copy" should match those of actual table
+	#TODO: parameters for "copy_only" should match those of actual table
 	my ($s, $dh) = @_ ;
 
-	$s->{$_}     =~  s/ \\ (?=,) //gox      for keys %$s;
-	$s->{format} =~  s/^ \s*'|'\s* $//xog;
+	#say  "$_  =>", $s->{$_}  for keys %$s; exit;
+	$s->{$_} =~  s/ \\ (?=,) //gox      for keys %$s;
 
-        my $attributes = [ get_columns_names( $dh, $s->{table}, $s ) ];
+        my $attributes   = [ get_columns_names( $dh, $s->{table}, $s ) ];
+	$s->{attributes} = $attributes;
+	LOGEXIT("Could not fetch column names from db for table $s->{table}")  
+				      unless @$attributes;
 
 	$s->{copy}  =  ($s->{copy}=~/^\s*[*]\s*$/ox) ?  $attributes 
                                                      : _copy_param $s->{copy};
-
 	($s->{copy_columns}||'') =~/^\s*[*]\s*$/ox 
-                                             and $s->{copy_columns}=$attributes;
+                                             and $s->{copy_columns}=$s->{copy};
+	# Ensure that "copy" and "copy_columns" are always arrayref
+	ref $s->{copy}         or $s->{copy} = [$s->{copy}];
+	ref $s->{copy_columns} or $s->{copy_columns} = [$s->{copy_columns}];
 
-	ref $s->{copy}         or $s->{copy}         = [$s->{copy}];
-	if ($s->{copy_columns}) {
-		ref $s->{copy_columns} or 
-		$s->{copy_columns} = [$s->{copy_columns}];
-	}
-	subset $attributes,$s->{copy} or LOGDIE q(invalid values for "copy"');
-	subset( $attributes, $s->{copy_columns}) or
-                          LOGDIE  q(invalid values for copy_columns');
+	# Check semantics for these things:
+        # 1. "copy" is a subset of the real attribute names
+        # 2. "copy" is a subset of the real attribute names
+        # 3. "copy_only" is a subset of "copy"
+	my $cmsg = q(names in "copy" are not a subset of actual table names);
+	subset $attributes, $s->{copy}           or LOGEXIT( $cmsg );
+	$cmsg= q(names in "copy_columns" are not a subset for actual names);
+	subset( $attributes, $s->{copy_columns}) or LOGEXIT(  $cmsg );
+	$cmsg= q(names in "copy_columns" are not a subset of "copy");
+	subset( $s->{copy}, $s->{copy_columns})  or LOGEXIT(  $cmsg );
+	DEBUG("\tPassed semantic check");
+}
 
-	given ($s->{format} ) {
-		when (/^(text|csv)$/)  {} ;
-		default   { LOGDIE( q(format must be 'text' or 'csv')) };
-	};
-	
+sub reformat_values {
+	# Adjusts values as needed.
+	# Assumption: The configuration syntax obay grammar
+	# Output: TODO
+	my ($s, $dh) = @_ ;
+	return unless $s->{ reformat} ;
         (ref $s->{reformat} eq 'ARRAY') or $s->{reformat} = [$s->{reformat} ];
-	
-	if ( $s->{reformat} ) {
-		for ( @{$s->{reformat}} ) {
-			next unless $_;
-			my ($col, $mod, $fun ) = m/^(\w+): (.*)::(\w+) $/gxo;
-			next unless defined $fun;
-			$s->{rfm}{$col} = { col=>$col, pack=>$mod, fun=>$fun };
-		}
-        }
-	$s->{attributes} = $attributes;
-	DEBUG("\tPassed filter");
+	for ( @{$s->{reformat}} ) {
+		next unless $_;
+		my ($col, $mod, $fun ) = m/^(\w+): (.*)::(\w+) $/gxo;
+		next unless defined $fun;
+		$s->{rfm}{$col} = { col=>$col, pack=>$mod, fun=>$fun };
+	}
+	DEBUG("\tPassed reformat");
 }
 
 sub add_modules {

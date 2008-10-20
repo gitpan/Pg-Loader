@@ -1,5 +1,6 @@
 Build.PL
 Changes
+TODO
 lib/Pg/Loader.pm
 lib/Pg/Loader/Columns.pm
 lib/Pg/Loader/Query.pm
@@ -26,7 +27,7 @@ t/06_requested_cols.t
 t/11_ini_conf.t
 t/12_error_check.t
 t/13_subset.t
-t/14_ckeck_copy.t   
+t/14_check_copy_grammar.t
 t/15_copy_param.t  
 t/16_combine.t
 t/20_disable_indexes.t

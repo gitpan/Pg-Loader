@@ -20,6 +20,8 @@ error_check_pgsql( $conf, $ini );
 
 my $dh   = connect_db  $ini->{pgsql};
 
+#print Dumper primary_keys($dh, 'hist.java'); exit;
+
 show_sections($conf, $ini)  unless @ARGV;
 
 ## MAIN
@@ -95,9 +97,8 @@ access the database.
  user           [optional]  name of login user. Default is epid of user
  pass           [optional]  user password. Not needed if using libpq defaults.
  pgsysconfdir   [optional]  dir for PGSYSCONFDIR
- service                    mandatory only when pgsysconfdir ( or the 
-                            enviromental variable PGSYSCONFDIR ) is defined;
-                            otherwise it is ignored
+ service        mandatory only when pgsysconfdir ( or the enviromental 
+                variable PGSYSCONFDIR ) is defined .
 
 =item [template1]
 
@@ -121,64 +122,79 @@ the corresponding table section defines how to load this table.
 Try to keep the name of the section the same as the name of the table.
 In a table section you can define the following parameters:
 
- filename             filename with data for the table         [optional]
+ table                [ MANDATORY ]  Tablename or schema.tablename . 
+                      Defaults to section name.       
+
+ filename             [ OPTIONAL ]  Filename with data for the table   
 	              If missing, or set to 'STDIN', input data should
                       arrive from standard input.
                        
-
- table                [Mandatory]  tablename or use schema.tablename. 
-                      Defaults to section name                 [mandatory]
-
- use_template         which template to use for default values [optional]
+ use_template         [ OPTIONAL ]   Template to use for default values.
 
  field_sep            Delimiter that separates fields. The default for
                       text formats is TAB, and for csv formats is ',' 
 
- format               must be either 'text' or 'csv' (without the quotes)
-                      Default is text.
+ format               [ OPTIONAL ]   Must be either 'text' or 'csv' (without 
+                      the quotes). Default is text.
 
- copy                 names of columns found in data file        [optional]
-                      Defauls to * , which uses the same column order found
-                      in the table definition inside postgres.  Useful when
-                      your file contains data in different order.
+ copy                 [ OPTIONAL ]   Names of columns found in data file. 
+                      The names must match those in the database table.
+                      Defauls to * . If you don't wish to list the names
+                      in there proper order, you must append a number next
+                      to their name; useful when the data file contains data
+                      data in different order.
 	              Example:  copy = age, last, first
                                 copy = first:3, age:1, last:2
 
- copy_columns         names of columns to use for COPY.          [optional]
-	              The char '*' means all columns, but since this is 
-                      also the default you may as well leave it blank
+copy_columns          [ OPTIONAL ]    Names of columns to use for COPY.     
+	              The char '*' means all columns specified with
+                      the "copy" parameter; carefull, it does not mean
+                      all columns defined for the database table, for it
+                      would not make sence, much or little.  Default is '*', 
+                      again, this means, same as "copy".  For this parameter,
+                      names need not obey a particular order.
 		      Example:  copy_columns = first, last, age
 	                        copy_columns = *
 
- only_cols            which column numbers to COPY ; counting    [optional]
-	              starts from 1. The char '*' means all columns, but 
-                      since this is also the default you may as well leave 
-                      it blank. Example: only_cols = 1-2, 3, 5
-			                 only_cols = 3
+ only_cols            [ OPTIONAL ]    Same purpose as "copy_columns", but here 
+                      we use numbers (instead of names), to specify the 
+                      columns. Numbers start from 1, ranges are also allowed. 
+                      The char '*' means all columns, and is the default.
+                      Example: only_cols = 1-2, 3, 5
+			       only_cols = 3
 
- quotechar            Usefull only for csv formats. Default is "
+ quotechar            [ OPTIONAL ]    Usefull only for csv formats. Default is "
 
- null                 String that designates a NULL value ; 
+ null                 [ OPTIONAL ]    String that indicates the  NULL value ; 
                       usefull only for text mode. Default is string '\NA'
 
- skipinitialspace     when defined, we ignore leading and trailing whitespace
+skipinitialspace      [ OPTIONAL ]    Ignore leading and trailing whitespace
 
- udc_COLUMNAME        assign this value for all rows of column COLUMNAME
+udc_COLUMNAME         [ OPTIONAL ]    Assign this value for all rows whose name
+                      is column COLUMNAME
 		      Examples: udc_title = Sir 
                                 udc_age   = 99 
                                 udc_race  = white
 
- reformat             reformat values of the age column by passing 
-                      it to function upper(), in the John::Util module
-                      reformat = age:John::Util::upper
+reformat              [ OPTIONAL ]    reformat values of the age column by 
+                      passing it to function upper(), in the John::Util 
+                      module reformat = age:John::Util::upper
 
- copy_every           How many tuples to copy per transaction. 
+copy_every            [ OPTIONAL ]    How many tuples to copy per transaction. 
                       More transactions are automatically created to 
                       insert the rest of the date, each inserting
                       upto that many tuples. Defaults is 10_000
                       TIP: set this parameter to 1 if you wish
                       to avoid the case where one bad tuple
                       cause other tuples to also fail.
+datestyle             [ OPTIONAL ]   Set datestyle parameter, omit all quotes.
+                      Example:  datestyle=euro
+                                datestyle=us
+
+client_encoding       [ OPTIONAL ]   Set client encoding, omit all quotes.
+lc_messages           [ OPTIONAL ]   Set lc messages parameter, omit all quotes.
+lc_numeric            [ OPTIONAL ]   Set lc numeric parameter, omit all quotes.
+
 
 NOTE: Because of how the ini format is defined as a value separator,
 if you need to include the , char, you must escape it with \ . For

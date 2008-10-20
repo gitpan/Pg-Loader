@@ -2,7 +2,7 @@ use Pg::Loader::Misc;
 use Test::More qw( no_plan );
 use Test::Exception;
 
-*_check_copy = \&Pg::Loader::Misc::_check_copy ;
+*_check_copy = \&Pg::Loader::Misc::_check_copy_grammar ;
 my $a;
 
 $a =  ' * ';

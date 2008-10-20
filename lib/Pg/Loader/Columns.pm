@@ -91,7 +91,8 @@ sub pack_cols {
 
 sub requested_cols {
 	# select colomns from $all
-	# Assumptions:  Only one of $s->{copy_columns}  or $s->{only_cols}
+	# Assumption:  Only one of $s->{copy_columns}  or $s->{only_cols}
+	# Assumption:  the user specified a valid "copy" parameter
 	# are defined. If none are defined, it returns all columns.
 	my  $s = shift || return;
 	my  $all = $s->{attributes};

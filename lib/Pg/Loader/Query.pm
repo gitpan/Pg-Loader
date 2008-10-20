@@ -16,12 +16,13 @@ use Pg::Loader::Misc;
 use Data::Dumper;
 use Text::CSV;
 
-our $VERSION = '0.04';
+our $VERSION = '0.10';
 
 our @EXPORT = qw(
-	connect_db	  get_columns_names
+	connect_db	  get_columns_names   primary_keys
 	disable_indexes   enable_indexes      vacuum_analyze 
 );
+
 
 sub connect_db {
         my $pgsql   =  shift                                       ;
@@ -94,7 +95,7 @@ sub enable_indexes {
 	}
 }
 
-sub schema_name {
+sub schema_name  {
 	my ($canonical, $search) = @_ ;
 	my ($schema, $table) = split /\./, $canonical, 2 ;
 	unless ($table ) {
@@ -102,6 +103,23 @@ sub schema_name {
 		$schema = $search || 'public'; 
         }
 	( $schema, $table );
+}
+
+
+sub primary_keys  {
+        # Input: name of table
+        # Output: names of its columns that form primary key
+        my ( $dh, $schema, $table) = ($_[0], schema_name( $_[1]  ));
+        (my $st =  $dh->prepare(<<""))->execute( $schema, $table );
+                SELECT  column_name
+                FROM    information_schema.constraint_column_usage, pg_index
+                WHERE   indexrelid::regclass::text = 
+                        constraint_schema||'.'||constraint_name
+		   and  table_schema =  ?
+		   and  table_name   =  ?
+
+        my $h = $st->fetchall_arrayref;
+        [ map { ${$_}[0] }   @$h ];
 }
 
 

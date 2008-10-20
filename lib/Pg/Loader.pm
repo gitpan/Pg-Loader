@@ -17,11 +17,42 @@ use Pg::Loader::Columns;
 use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 our @EXPORT = qw( loader  );
 
-sub every {
+sub update {
+	my ($s, $dh, $col, $csv, $fd, $conf, $defs, @col) = @_;
+	my ( $format, $null, $table) = @{$s}{'format','null','table'};
+	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} );
+
+	my $sql  = "update $table set ";
+           $sql .= "";
+	   $sql  = "where col = x ";
+	DEBUG( "\t\t$sql" )                                   ;
+	$dh->do( $sql )  if (! $dry)                          ;
+
+	state ($rows, $errors) ;
+	my $data;
+	while ( $r -- ) {
+	        $data = $csv->getline_hr ($fd) ;
+		last unless $data;
+		last if _stop_input($conf, $rows//0)               ;
+		$_     = combine( $s, $csv, $data, @col )         ;
+		DEBUG( "\t\t$_" )                                 ;
+		#$rows += $dh->pg_putcopydata("$_\n") unless $dry  ;
+	}
+	if ((! $dry) and $dh->pg_putcopyend() ) {
+                enable_indexes( $dh, $table, $defs )  if $conf->{indexes};
+		$dh->commit ;
+	}else{
+		$dh->rollback; $errors++; $rows=0 ;
+	}
+
+	($rows, $errors//0, $data);
+}
+
+sub insert {
 	my ($s, $dh, $col, $csv, $fd, $conf, $defs, @col) = @_;
 	my ( $format, $null, $table) = @{$s}{'format','null','table'};
 	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} );
@@ -36,6 +67,7 @@ sub every {
 	my $data;
 	while ( $r -- ) {
 	        $data = $csv->getline_hr ($fd) ;
+#say Dumper $data;
 		last unless $data;
 		last if _stop_input($conf, $rows//0)               ;
 		$_     = combine( $s, $csv, $data, @col )         ;
@@ -54,16 +86,24 @@ sub _stop_input {
 	my ($conf, $rows) = @_ ;
 	($rows//0) >= ($conf->{count} // '1E10')   ;
 }
+sub pgoptions {
+	my ($dh, $s) = @_ ;
+	for ( qw(datestyle client_encoding lc_messages lc_numeric)) {
+		next unless $s->{$_};
+		$dh->do( "set $_ to ". $dh->quote($s->{$_} ));
+	}
+}
 
 sub loader {
 	my ( $conf, $ini, $dh, $section ) = @_                 ;
 	my   $s = $ini->{$section}                             ;
 	INFO("Processing [$section]")                          ;
 
-	add_defaults( $ini, $section  )                        ;
-	error_check(  $ini, $section  )                        ;
-	filter_ini(   $ini->{$section}, $dh )                  ;
-	add_modules(  $ini->{$section}, $dh )                  ;
+	add_defaults(     $ini, $section        )              ;
+	error_check(      $ini, $section        )              ;
+	filter_ini(       $ini->{$section}, $dh )              ;
+	reformat_values(  $ini->{$section}, $dh )              ;
+	add_modules(      $ini->{$section}, $dh )              ;
 	my $dry = $conf->{dry_run}                             ;
 
 	my ($file, $format, $null, $table) = 
@@ -77,16 +117,22 @@ sub loader {
 	my ($t0, $rows, $errors, $data) =  ([gettimeofday], 0, 0,'true')  ;
 
 	$dh->begin_work;
+	pgoptions( $dh, $s );	
 	_truncate( $dh, $table, $dry )             if $conf->{truncate};
 	_disable_triggers( $dh, $table, $dry)      if $conf->{disable_triggers};
 	my $defs ; 
 	$defs = _disable_indexes( $dh, $table)     if $conf->{indexes};
 
 	while ( 1 ) {
+	    if ( $conf->{update} ) {
 		($rows, $errors, $data)= 
-		       every($s, $dh, $col, $csv, $fd, $conf, $defs, @col);
-		last unless $data                                         ;
-		last if _stop_input($conf, $rows//0)                      ;
+	                update($s, $dh, $col, $csv, $fd, $conf, $defs, @col);
+	    }else {
+		($rows, $errors, $data)= 
+		        insert($s, $dh, $col, $csv, $fd, $conf, $defs, @col);
+	    }
+	    last unless $data                                         ;
+	    last if _stop_input($conf, $rows//0)                      ;
 	}
 
 	vacuum_analyze( $dh, $table, $dry )        if $conf->{vacuum};

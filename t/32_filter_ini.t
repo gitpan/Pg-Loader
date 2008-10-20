@@ -34,6 +34,8 @@ my $m = { copy=>['classid', 'objid'], format=>'text', table=>'a' ,
 };
 my $ans = { col=>'objid', pack=>'John::Misc', fun=>'upper'};
 
+#TODO
+exit;
 filter_ini ( $k, $dh );
 filter_ini ( $m, $dh );
 
