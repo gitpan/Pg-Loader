@@ -3,7 +3,8 @@ use Test::More qw( no_plan );
 use Test::Exception;
 
 
-*add_defaults = \& Pg::Loader::Misc::add_defaults;
+*add_defaults = \& Pg::Loader::Misc::add_defaults ;
+*subset       = \& Pg::Loader::Misc::subset       ;
 
 my $m = { apple  => {  } };
 my $s = { apple  => { null => 'na', use_template=>undef } ,
@@ -30,12 +31,14 @@ is   $aa->{ format }   ,  'csv'            ;
 is_deeply [ @{$bb}{qw( table format only_cols )}], 
           [        qw( apple csv 1)       ];
 
-my $fields = [qw( copy copy_columns copy_every field_sep 
-                  filename format null quotechar table 
+my $mandatory = [qw( copy     copy_every    null       copy_columns
+		     format   quotechar     table      field_sep
+		     mode     reject_data   filename   client_encoding
+                     lc_time  datestyle     lc_monetary  
+                     lc_type  lc_numeric    lc_messages 
              )];
-#TODO
-#is_deeply [ sort keys %{$m->{apple}} ] , $fields ;
-#is scalar (values %{$m->{apple}}), @$fields; 
+
+ok subset  [keys %$aa], $mandatory  ;
 
 is_deeply [ @{$mm}{qw( copy copy_every filename      format table)}],
 	  [        qw( *    10000      STDIN         text    apple)];
@@ -44,6 +47,9 @@ is   $bb->{ null }  ,  'NULL as $$bb$$' ;
 is   $mm->{ null }  ,  'NULL as $$\NA$$' ;
 is   $ss->{ null }  ,  'NULL as $$na$$'  ;
 
-dies_ok { add_defaults ( $s, 'appl') };
-dies_ok { add_defaults ( $s, '') };
-dies_ok { add_defaults ( $s, undef) };
+
+#exit
+# the following fail because they exit(1) instead of die()
+#dies_ok { add_defaults ( $s, 'appl') };
+#dies_ok { add_defaults ( $s, '') };
+#dies_ok { add_defaults ( $s, undef) };

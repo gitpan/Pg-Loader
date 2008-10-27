@@ -5,6 +5,7 @@ lib/Pg/Loader.pm
 lib/Pg/Loader/Columns.pm
 lib/Pg/Loader/Query.pm
 lib/Pg/Loader/Misc.pm
+lib/Pg/Loader/Log.pm
 examples/a.conf  
 examples/b.conf  
 examples/exam.dat  

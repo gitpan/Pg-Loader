@@ -49,23 +49,17 @@ sub init_csv {
  	}   or   die Text::CSV->error_diag ;
 }
 
-sub _names2numbers {
-	my ($colref, $all_names, @names) = @_ ;
-	my @nums;
-	for my $n (@names) {
-		push @nums, firstidx {$_ eq $n} @$all_names  ;
-	}
-	\@nums;
-}
 
 sub combine {
 	my ( $s, $csv, $d, @col )  = @_;
+	return '' unless @col;
 	for ( @col ) {
 		 my $h    = $s->{rfm}{$_};
 		 my $val  = $d->{$_};
 		 exists $s->{ "udc_$_"} and $d->{$_} = $s->{ "udc_$_"};
 		 next unless $h->{ref};
-		 $d->{$_} =  $h->{ref}( $val );
+		 my $ref = UNIVERSAL::can( $h->{pack}, $h->{fun} );
+		 $d->{$_} =  $ref->( $val );
 	} 
 	join $csv->{sep_char}//'',  map { $_ // '' } @{$d}{@col};
 }

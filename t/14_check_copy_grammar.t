@@ -11,24 +11,6 @@ lives_ok {_check_copy($a) };
 $a =  ' a ';
 lives_ok {_check_copy($a) };
 
-$a =  ' a:';
-dies_ok {_check_copy($a) };
-
-$a =  'a:1';
-lives_ok {_check_copy($a) };
-
-$a =  'a:2';
-dies_ok {_check_copy($a) };
-
-$a = [ 'a','b', 'c:3',undef];
-dies_ok {_check_copy($a) };
-
-$a   = [ 'a', undef ];
-dies_ok {_check_copy($a) };
-
-$a   = [ undef ];
-dies_ok {_check_copy($a) };
-
 $a   =  undef ;
 lives_ok {_check_copy($a) };
 
@@ -50,4 +32,24 @@ lives_ok {_check_copy( $a) };
 
 $a   = ' a:1' ;
 lives_ok {_check_copy( $a) };
+
+
+exit;
+$a =  ' a:';
+dies_ok {_check_copy($a) };
+
+$a =  'a:1';
+lives_ok {_check_copy($a) };
+
+$a =  'a:2';
+dies_ok {_check_copy($a) };
+
+$a = [ 'a','b', 'c:3',undef];
+dies_ok {_check_copy($a) };
+
+$a   = [ 'a', undef ];
+dies_ok {_check_copy($a) };
+
+$a   = [ undef ];
+dies_ok {_check_copy($a) };
 

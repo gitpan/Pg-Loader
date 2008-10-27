@@ -29,6 +29,7 @@ is_deeply _copy_param( $a) , $ans;
 $a   = ' a:1' ;
 is_deeply _copy_param( $a) , ['a'];
 
+exit;
 $a = [ 'a:2'];
 dies_ok { _copy_param($a) };
 

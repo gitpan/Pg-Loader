@@ -109,6 +109,28 @@ copy_columns          [ OPTIONAL ]    Names of columns to use for COPY.
                       Example:  copy_columns = first, last, age
                                 copy_columns = *
 
+update                [ OPTIONAL ]   Names of columns found in data file.
+                      By including this tag, you are switching to the UPDATE
+                      mode for the purpose to change some (or all) fields
+                      of an existing row. Updates are allowed only if the
+                      the table contains primary keys.
+                      The format and semantics are identical to "copy".
+
+update_copy           [ OPTIONAL ]    Names of columns for the update mode.
+                      The format and semantics are identical to "copy_columns".
+
+reject_data           [ OPTIONAL ]    Specifies the pathname for the file
+                      that records rejected data. Default is STDOUT .
+                      Output is enabled by the default or a more permissive
+                      logging level.
+
+reject_log            [ OPTIONAL ]    Specifies the pathname for the file
+                      that records diagnostics. Default is STDERR .
+                      Output is enabled by the default or a more permissive
+                      logging level.
+
+
+
  only_cols            [ OPTIONAL ]    Same purpose as "copy_columns", but here
                       we use numbers (instead of names), to specify the
                       columns. Numbers start from 1, ranges are also allowed.
@@ -145,6 +167,9 @@ datestyle             [ OPTIONAL ]   Set datestyle parameter, omit all quotes.
 
 client_encoding       [ OPTIONAL ]   Set client encoding, omit all quotes.
 lc_messages           [ OPTIONAL ]   Set lc messages parameter, omit all quotes.
+lc_monetary           [ OPTIONAL ]   Set lc monetary, omit all quotes.
+lc_time               [ OPTIONAL ]   Set lc time, omit all quotes.
+
 
 NOTE: Because of how the ini format is defined as a value separator,
 if you need to include the , char, you must escape it with \ . For

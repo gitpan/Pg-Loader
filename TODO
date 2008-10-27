@@ -1,13 +1,16 @@
-* allow for datestyle, lc_numeric, etc,.          DONE
-* should take data from STDIN                     DONE
+* check if udc_ is not working.
 * test lc_numeric
 * in filter_ini() , allow for custom column names when checking for 
   valid column names. 
-* if pgloader.pl already has the following features, then Document them!
-* make manpage more infomative, add contents of USAGE area?
+* allow "copy" to ignore certain columns (not founnd in db table)
+* if pgloader.pl already has the following features, document them!
+* Need detailed documentation for usage
 * can the present pgloader.pl parse (unquoted) space-delimited data?
-* show why the commit failed
-* show which entries failed
-* should have command-line to change table, infile, etc,.
-* should have to option to continue if some data are rejected. This
-  essentially needs a command option for copy_every = 1
+* show why commit failed                                 DONE?
+* show which entries failed                              DONE
+* allow for datestyle, lc_numeric, etc,.                 DONE
+* should take data from STDIN                            DONE
+* should have command-line to change table               DONE
+* Option -e to continue if only some data                DONE
+* enable pgloader to update tables based on pk           DONE
+* implemet size in summary table                         DONE

@@ -1,3 +1,4 @@
+
 # Copyright (C) 2008 Ioannis Tambouras <ioannis@cpan.org>. All rights reserved.
 # LICENSE:  GPLv3, eead licensing terms at  http://www.fsf.org .
 
@@ -5,7 +6,6 @@ package Pg::Loader::Query;
 
 use v5.10;
 use DBI;
-use Data::Dumper;
 use strict;
 use warnings;
 use base 'Exporter';
@@ -21,8 +21,47 @@ our $VERSION = '0.10';
 our @EXPORT = qw(
 	connect_db	  get_columns_names   primary_keys
 	disable_indexes   enable_indexes      vacuum_analyze 
-);
+	update_string     pgoptions           create_tmp_table
+	_truncate         _disable_triggers   _disable_indexes
 
+);
+sub _truncate {
+        my ($dh, $table, $dry) = @_  ;
+        INFO("\tTruncating $table")                ;
+        $dh->do("truncate $table")   unless $dry   ;
+}
+sub _disable_triggers {
+        my ($dh, $table, $dry) = @_  ;
+        DEBUG( "\tDisabling triggers")             ;
+        $dh->do( <<"")                unless $dry  ;
+        ALTER TABLE $table DISABLE TRIGGER ALL
+
+}
+sub _disable_indexes {
+        my ($dh, $table, $dry) = @_  ;
+        disable_indexes( $dh, $table ) unless $dry
+}
+
+sub  create_tmp_table {
+        my ($dh, $like) = @_ ;
+        my  $sql = <<"";
+         DROP TABLE IF EXISTS d;
+         CREATE TEMP TABLE d (like $like including indexes)
+
+        $dh->do( $sql )  or LOGDIE( $dh->errstr );
+        #TODO delete next line
+        DEBUG( 'created tmp table d' );
+}
+
+
+sub pgoptions {
+        my ($dh, $s) = @_ ;
+        for ( qw( datestyle client_encoding
+                  lc_messages lc_numeric lc_monetary lc_time)) {
+                next unless $s->{$_};
+                $dh->do( "set $_ to ". $dh->quote($s->{$_} ));
+        }
+}
 
 sub connect_db {
         my $pgsql   =  shift                                       ;
@@ -110,16 +149,14 @@ sub primary_keys  {
         # Input: name of table
         # Output: names of its columns that form primary key
         my ( $dh, $schema, $table) = ($_[0], schema_name( $_[1]  ));
-        (my $st =  $dh->prepare(<<""))->execute( $schema, $table );
-                SELECT  column_name
-                FROM    information_schema.constraint_column_usage, pg_index
-                WHERE   indexrelid::regclass::text = 
-                        constraint_schema||'.'||constraint_name
-		   and  table_schema =  ?
-		   and  table_name   =  ?
+	my $h = $dh->selectall_arrayref(<<"",{}, $schema, $table );
+        SELECT column_name
+        FROM information_schema.constraint_table_usage T
+         join information_schema.constraint_column_usage using (constraint_name)        WHERE T.table_schema = ?
+          and T.table_name = ?
 
-        my $h = $st->fetchall_arrayref;
-        [ map { ${$_}[0] }   @$h ];
+	return unless $h;
+	[ map  { $_->[0] }   @$h  ] ;
 }
 
 
@@ -136,6 +173,28 @@ sub get_columns_names {
         my $h = $st->fetchall_arrayref;
         map { ${$_}[0] }   @$h ;
 }
+sub _where_clause {
+        my ($pk , $target, $from) = @_ ;
+        my  $sql =  'WHERE ' ;
+        $sql .= "$target.$_=$from.$_  and  "  for  @$pk;
+        $sql =~ s/and\s*$//o , $sql;
+}
+sub _set_clause {
+        my ($cols, $from) = @_ ;
+	return unless @$cols;
+        my  $sql =  'SET ' ;
+        $sql .= "$_=$from.$_, "  for  @$cols;
+	$sql =~ s/,\s*$/ /o; 
+        $sql ;
+}
+sub update_string {
+        my ( $from, $target, $set_cols, $where_cols ) = @_ ;
+        my $sql  = "UPDATE $target ";
+           $sql .=  _set_clause( $set_cols, $from ) ;
+           $sql .= "FROM  $from   "  ;
+           $sql .= _where_clause( $where_cols, $target, 'd');
+}
+
 
 
 1;

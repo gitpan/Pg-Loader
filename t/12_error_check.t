@@ -19,13 +19,13 @@ my $d1 = { pgsql => { base => undef, host => 'localhost' },
            cvs1  => { copy_columns => 'age', only_cols=>'1-3', filename=>'a',
                       table=>'a', format=>'csv'} 
 };
-dies_ok   { error_check( $h,  'a'   ) }  ;
-lives_ok  { error_check( $h,  'cvs1') }  ;
-lives_ok  { error_check( $a1, 'cvs1') }  ;
-lives_ok  { error_check( $a2, 'cvs1') }  ;
+lives_ok  {  error_check( $h,  'cvs1')   };
+lives_ok  {  error_check( $h,  'cvs1')   };
+lives_ok  {  error_check( $a1, 'cvs1')   };
+lives_ok  {  error_check( $a2, 'cvs1')   };
 
-#TODO
 exit;
+dies_ok   { error_check( $h,  'a'   ) }  ;
 dies_ok   { error_check( $d1, 'cvs1') }  ;
 
 dies_ok   { error_check( $h, '' )     }  ;

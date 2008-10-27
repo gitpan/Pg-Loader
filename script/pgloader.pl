@@ -13,21 +13,32 @@ use warnings;
 our $VERSION = '0.01';
 
 my $conf = fetch_options(); 
-l4p_config( $conf );
+#l4p_config( $conf );
+
 
 my $ini  = ini_conf    $conf->{config} ;
 error_check_pgsql( $conf, $ini );
 
 my $dh   = connect_db  $ini->{pgsql};
 
-#print Dumper primary_keys($dh, 'hist.java'); exit;
-
 show_sections($conf, $ini)  unless @ARGV;
 
 ## MAIN
-my @stats =  map { loader $conf, $ini, $dh , $_ }     @ARGV;
+my @stats;
+
+for  ( @ARGV ) {
+	add_defaults( $ini, $_ )  ;
+	# setup per-section logging
+	l4p_config( $conf, @{$ini->{$_}}{qw( reject_data reject_log )});
+
+        # update, or load table
+        $ini->{$_}{mode} eq 'update' 
+ 	 	? (push @stats,    update_loader( $conf, $ini, $dh , $_)) 
+ 	 	: (push @stats,    copy_loader( $conf, $ini, $dh , $_))  ;
+};
 
 print_results( @stats)  if $conf->{summary};
+
 END { $dh and $dh->disconnect }
 
 
@@ -156,7 +167,27 @@ copy_columns          [ OPTIONAL ]    Names of columns to use for COPY.
 		      Example:  copy_columns = first, last, age
 	                        copy_columns = *
 
- only_cols            [ OPTIONAL ]    Same purpose as "copy_columns", but here 
+update                [ OPTIONAL ]   Names of columns found in data file. 
+                      By including this tag, you are switching to the UPDATE
+                      mode for the purpose to change some (or all) fields
+                      of an existing row. Updates are allowed only if the
+                      the table contains primary keys.
+	              The format and semantics are identical to "copy".
+
+update_copy           [ OPTIONAL ]    Names of columns for the update mode. 
+	              The format and semantics are identical to "copy_columns".
+
+reject_data           [ OPTIONAL ]    Specifies the pathname for the file
+                      that records rejected data. Default is STDOUT .
+                      Output is enabled by the default or a more permissive 
+                      logging level.
+
+reject_log            [ OPTIONAL ]    Specifies the pathname for the file
+                      that records diagnostics. Default is STDERR .
+                      Output is enabled by the default or a more permissive 
+                      logging level.
+
+only_cols             [ OPTIONAL ]    Same purpose as "copy_columns", but here 
                       we use numbers (instead of names), to specify the 
                       columns. Numbers start from 1, ranges are also allowed. 
                       The char '*' means all columns, and is the default.
@@ -194,6 +225,8 @@ datestyle             [ OPTIONAL ]   Set datestyle parameter, omit all quotes.
 client_encoding       [ OPTIONAL ]   Set client encoding, omit all quotes.
 lc_messages           [ OPTIONAL ]   Set lc messages parameter, omit all quotes.
 lc_numeric            [ OPTIONAL ]   Set lc numeric parameter, omit all quotes.
+lc_monetary           [ OPTIONAL ]   Set lc monetary, omit all quotes.
+lc_time               [ OPTIONAL ]   Set lc time, omit all quotes.
 
 
 NOTE: Because of how the ini format is defined as a value separator,

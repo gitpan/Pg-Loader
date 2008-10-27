@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Pg-Loader
-version:             0.10
+version:             0.11
 abstract:            Perl extension for loading Postgres tables
 license:             perl
 author:              
@@ -10,11 +10,12 @@ distribution_type:   module
 requires:     
     Config::Format::Ini:           0.05
     Data::Dumper:                  2.121_08
-    DBD::Pg:                       2.8.1
+    DBD::Pg:                       2.10.7
     Getopt::Compact:               0.04
     List::MoreUtils:               0.22
     Log::Log4perl:                 1.16
     Quantum::Superpositions:       2.02
+    Storable:                      2.18
     Test::Exception:               0.27
     Test::MockDBI:                 0.61
     Test::Pod:                     1.0

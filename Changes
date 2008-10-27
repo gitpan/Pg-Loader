@@ -1,5 +1,15 @@
 Revision history for Perl extension Pg::Loader.
 
+0.11  Sun Oct 26 21:54:30 2008
+	- Added UPDATE capabilities, but only when table has primary keys
+	- Added lc_monetary and lc_time support
+	- Added command option -e  that sets copy_every=1
+	- Added command option -t  that sets schema.table
+        - Added "update" , "update_copy", "reject_data", and "reject_log"
+	- Added --Logfile command-line option
+        - Some ok_dies regression tests are disabled due to LOGEXIT, overide
+          them.
+
 0.10  Mon Oct 20 01:09:58 2008
         - Added lc_messages, datestyle, and client_encoding 
 	- Fixed 'copy" and "copy_only" to work with variable

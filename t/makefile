@@ -6,7 +6,9 @@
 #   05_field_nums_reqe.t        06_requested_cols.t       
 #   10_simplify_ini.t           11_ini_conf.t             12_error_check.t
 #   13_subset.t                 14_check_copy_grammar.t   15_copy_param.t
+#   16_combine.t
 #   20_disable_indexes.t        21_enable_indexes.t       22_stop_input.t
+#   24_sql_clause.t
 #   31_add_defaults.t           32_filter_ini.t
 #   40_kwalitee.t
  
@@ -14,7 +16,10 @@ MODULES  =  -MData::Dumper -MCarp
 MODULES +=  -MTest::More   -Mblib=../blib -Mv5.10 
 
 #all: 01c_coverage.t
-all: 31_add_defaults.t
+#all: 31_add_defaults.t
+all:  14_check_copy_grammar.t
+#all: 24_sql_clause.t
+#all: 16_combine.t
 #all: 40_kwalitee.t
 #all: 32_filter_ini.t
 #all: 06_requested_cols.t
@@ -34,6 +39,8 @@ vim: w
 	vim  ../blib/lib/Pg/Loader/Misc.pm  
 vic: w
 	vim  ../blib/lib/Pg/Loader/Columns.pm  
+vio: w
+	vim  ../blib/lib/Pg/Loader/Log.pm  
 vi: w
 	vim  ../script/pgloader.pl
 pod:
