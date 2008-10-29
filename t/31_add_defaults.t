@@ -25,7 +25,7 @@ is_deeply [ @{$aa}{qw( copy_every filename     )}], [ qw( 10000 STDIN )];
 is_deeply [ @{$aa}{qw( field_sep)}], [ ',' ];
 
 
-is   $aa->{ null   }   ,  'NULL as $$aa$$' ;
+is   $aa->{ null   }   ,  '$$aa$$' ;
 is   $aa->{ format }   ,  'csv'            ;
 
 is_deeply [ @{$bb}{qw( table format only_cols )}], 
@@ -43,9 +43,9 @@ ok subset  [keys %$aa], $mandatory  ;
 is_deeply [ @{$mm}{qw( copy copy_every filename      format table)}],
 	  [        qw( *    10000      STDIN         text    apple)];
 
-is   $bb->{ null }  ,  'NULL as $$bb$$' ;
-is   $mm->{ null }  ,  'NULL as $$\NA$$' ;
-is   $ss->{ null }  ,  'NULL as $$na$$'  ;
+is   $bb->{ null }  ,  '$$bb$$' ;
+is   $mm->{ null }  ,  '$$\NA$$' ;
+is   $ss->{ null }  ,  '$$na$$'  ;
 
 
 #exit

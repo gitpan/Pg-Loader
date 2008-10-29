@@ -21,7 +21,7 @@ use base 'Exporter';
 use SQL::Abstract;
 use Storable qw( dclone );
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 our @EXPORT = qw( copy_loader  update_loader );
 
@@ -60,6 +60,7 @@ sub update_loader {
 	return $ret if $ret->{errors};
 
 	DEBUG "\tUpdating " . $s->{table}  ;
+	my $t0  =  [gettimeofday];
 	my $sql = update_string('d', @{$s}{'table','copy_columns','pk'} );
 	DEBUG "\t\t$sql";
 	unless ($dry) {
@@ -67,7 +68,8 @@ sub update_loader {
 		 if ( my $total = $dh->do($sql) ) {
 			 $dh->commit ;
 			  return
-                         { name=> $section, elapsed => $ret->{elapsed}//0,
+                         { name=> $section, 
+                           elapsed => $ret->{elapsed}+tv_interval($t0),
                            rows=> $total//0, errors  => $ret->{errors}//0,
                            size=> $s->{copy_every},
 			 }
@@ -102,13 +104,13 @@ sub load_2table {
 	my  $s = $ini->{$section}                             ;
 	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} );
 	my ($file, $format, $null, $table) = 
-                    @{$s}{'filename','format','null','table'};
-	my ($col, @col) = requested_cols( $s )               ;
-	INFO("\tReading from $file")                         ;
-	my $fd = \* STDIN                                    ;
-	open $fd, $file           unless  $file=~/^STDIN$/i  ;
-	my $csv = init_csv( $s )                             ;
-	$csv->column_names( @{$s->{copy}}  )                 ;
+                    @{$s}{'filename','format','null','table'} ;
+	my ($col, @col) = requested_cols( $s )                ;
+	INFO("\tReading from $file")                          ;
+	my $fd  = \* STDIN                                    ;
+	open $fd, $file           unless  $file=~/^STDIN$/i   ;
+	my $csv = init_csv( $s )                              ;
+	$csv->column_names( @{$s->{copy}}  )                  ;
 
 	local $dh->{ AutoCommit } = 0 ;
 	$dh->begin_work;
@@ -142,8 +144,9 @@ sub insert {
 
 	$dh->pg_savepoint('every_block');
 	my $defs = _disable_indexes( $dh, $table)     if $conf->{indexes};
-	my $sql  =   qq( COPY $table $col FROM STDIN 
-	                 WITH DELIMITER '$s->{field_sep}');
+	my $sql  =   qq( COPY $table $col FROM STDIN ) 
+                   . ($s->{format} eq 'csv' ? ' CSV ' : "" )
+                   . qq( DELIMITER '$s->{field_sep}'  NULL $s->{null} );
 
 	DEBUG( "\t\t$sql" )                                   ;
 	$dh->do( $sql )  if (! $dry)                          ;

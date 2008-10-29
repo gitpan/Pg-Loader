@@ -1,3 +1,5 @@
+* implement the cli option  -R reformat:path
+* check if coopy_every=1 for update loop works correctly
 * check if udc_ is not working.
 * test lc_numeric
 * in filter_ini() , allow for custom column names when checking for 

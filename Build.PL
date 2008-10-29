@@ -9,6 +9,7 @@ my $b= Module::Build->new(
                                 #'Carp::Assert'       => '0.18',
                                 #'File::Slurp'        => '9999.12',
                                 #'SQL::Abstract'      => '1.24',
+                                'Text::Table'         => '1.107',
                                 'Log::Log4perl'       => '1.16',
                                 'Storable'            => '2.18',
                                 'Config::Format::Ini' => '0.05',

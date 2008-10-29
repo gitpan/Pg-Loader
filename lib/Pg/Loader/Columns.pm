@@ -12,7 +12,7 @@ use List::MoreUtils  qw( firstidx );
 use Log::Log4perl qw( :easy );
 use base 'Exporter';
 
-our $VERSION = '0.02';
+our $VERSION = '0.12';
 
 our @EXPORT = qw(
 	range2list                  ranges2set	        data_fields

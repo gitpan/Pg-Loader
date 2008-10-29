@@ -11,7 +11,7 @@ use warnings;
 use base 'Exporter';
 use Log::Log4perl qw( :easy );
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 our @EXPORT = qw(
 	      REJECTLOG   del_stack
 );

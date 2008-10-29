@@ -15,11 +15,12 @@ use List::MoreUtils  qw( firstidx );
 use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 use Quantum::Superpositions ;
+use Text::Table;
 
 *get_columns_names = \&Pg::Loader::Query::get_columns_names;
 
 
-our $VERSION = '0.10';
+our $VERSION = '0.12';
 
 our @EXPORT = qw(
 	ini_conf	error_check   	fetch_options   show_sections
@@ -132,7 +133,7 @@ sub ini_conf {
 }
 
 sub usage   { say $o->usage() and exit }
-sub version { say $VERSION    and exit }
+sub version { say 'pgloader.pl version '. $VERSION    and exit }
 
 
 sub print_results {
@@ -160,15 +161,14 @@ sub add_defaults {
         merge_with_template( $s, $ini, $s->{use_template} ) ;
 	_switch_2_update( $s );
 
-        $s->{null} = 'NULL as $$'.($s->{null} //'\NA') .'$$'         ;
+        $s->{ format      }   //=  'text'                            ;
 	$s->{ copy        }   //= '*'                                ;  
 	$s->{ copy_every  }   //=  10_000                            ;
         $s->{ filename    }   //=  'STDIN'                           ;
-        $s->{ format      }   //=  'text'                            ;
-        $s->{ null        }   //=  '$$\NA$$'                         ;
         $s->{ table       }   //=   $section                         ;
 	$s->{ quotechar   }   //=  '"'                               ;
 	$s->{ reject_data }   //=   ''                               ;
+	$s->{ reject_log  }   //=   ''                               ;
 	$s->{ lc_messages }   //=   ''                               ;
 	$s->{ lc_numeric  }   //=   ''                               ;
 	$s->{ lc_monetary }   //=   ''                               ;
@@ -180,8 +180,17 @@ sub add_defaults {
 	$s->{copy_columns} = $s->{copy} 
                         unless ($s->{only_cols}||$s->{copy_columns});
 
-        my $is_text =  $s->{ format } =~ /^ '? text '?$/ox          ;
-        $s->{ field_sep  }   //=  $is_text ? "\t" : ','             ;
+	if (  $s->{ format } =~ /^ '? text '?$/ox  ) { 
+	        # format is 'text'
+                $s->{null} //= '$$\NA$$'            ;
+		$s->{null}   = '$$'.$s->{null}.'$$' if $s->{null} ne '$$\NA$$';
+		$s->{ field_sep  }   //=  "\t"      ;
+	}else{
+	        # format is 'csv'
+		$s->{null} //= '$$$$'               ;
+		$s->{null}   = '$$'.$s->{null}.'$$' if  $s->{null} ne '$$$$';
+		$s->{ field_sep  }   //= ','        ;
+	}
 }
 
 
@@ -308,7 +317,7 @@ sub _copy_param {
 
 
 sub filter_ini {
-        # Checks if configuration values are sensible. 
+        # Check if configuration values are sensible. 
 	# Assumption: The configuration syntax obeys grammar
 	# Output: records real table attributes to $s->{attributes}
 	# Output: "copy" and "copy_columns" become arrayrefs
@@ -316,7 +325,6 @@ sub filter_ini {
 	#TODO: parameters for "copy_only" should match those of actual table
 	my ($s, $dh) = @_ ;
 
-	#say  "$_  =>", $s->{$_}  for keys %$s; exit;
 	$s->{$_} =~  s/ \\ (?=,) //gox      for keys %$s;
 
         my $attributes   = [ get_columns_names( $dh, $s->{table}, $s ) ];
@@ -386,13 +394,21 @@ sub add_modules {
 sub show_sections {
 	my ($conf, $ini) = @_;
 	my $port = ':'. ($ini->{port}||5432)  ;
+	my $t    = new Text::Table  'SECTION   '  , 'TABLE    ', 
+                                    'FILE      '  , 'OPERATION' ;
 	DEBUG  "$ini->{pgsql}{base}\@$ini->{pgsql}{host}$port"   ;
 	while (my ($k,$v) = each %$ini) {
+		my $s = $ini->{$k};
 		next if $k eq 'pgsql';
-		next if exists $ini->{$k}{template};
-		my $file = $ini->{$k}{filename};
-		say  "[$k]      $ini->{$k}{filename}" ;
+		next if exists $s->{template};
+		next if $s->{template};
+		add_defaults  $ini, $k ;
+                _switch_2_update $s ;
+		my $file = $s->{filename}||'STDIN';
+		#say  sprintf  '%-18s %-20s', "[$k]", $file ;
+		$t->load( [ "[$k]", $s->{table}, $file,  $s->{mode} ] );
 	}
+	print $t;
 }
 
 1;

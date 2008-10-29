@@ -16,8 +16,7 @@ MODULES  =  -MData::Dumper -MCarp
 MODULES +=  -MTest::More   -Mblib=../blib -Mv5.10 
 
 #all: 01c_coverage.t
-#all: 31_add_defaults.t
-all:  14_check_copy_grammar.t
+all: 31_add_defaults.t
 #all: 24_sql_clause.t
 #all: 16_combine.t
 #all: 40_kwalitee.t

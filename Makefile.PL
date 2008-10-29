@@ -12,6 +12,7 @@ WriteMakefile(
 	                   #'File::Slurp'        => '9999.12',
 	                   #'SQL::Abstract'      => '1.24',
 	                   'Log::Log4perl'       => '1.16',
+                           'Text::Table'         => '1.107',
                            'Storable'            => '2.18',
 	                   'DBD::Pg'             => '2.10.7',
                            'Time::HiRes'         => '1.9711',

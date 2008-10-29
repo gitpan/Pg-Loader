@@ -38,6 +38,7 @@ List::MoreUtils          0.22
 Data::Dumper             2.121_08  
 Quantum::Superpositions  2.02  
 Storable                 2.18
+Text::Table              1.107
 
 
 

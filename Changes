@@ -1,5 +1,8 @@
 Revision history for Perl extension Pg::Loader.
 
+0.12  Wed Oct 29 03:43:27 2008
+	- minor bugfixes
+
 0.11  Sun Oct 26 21:54:30 2008
 	- Added UPDATE capabilities, but only when table has primary keys
 	- Added lc_monetary and lc_time support
