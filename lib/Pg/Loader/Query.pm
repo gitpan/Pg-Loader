@@ -81,7 +81,7 @@ sub connect_db {
         my $att  = { AutoCommit => 0 , pg_server_prepare => 1,
                      PrintError => 0 , Profile           => 0,
 		   };
-        DBI->connect( $dsn, $user // getlogin,$pass,$att) or die $DBI::errstr;
+        DBI->connect( $dsn, $user//getlogin,$pass,$att) or die "$DBI::errstr\n";
 }
 
 sub vacuum_analyze {

@@ -5,6 +5,7 @@ use lib qw( ../blib/lib ) ;
 use Pg::Loader;
 use Pg::Loader::Misc;
 use Pg::Loader::Query;
+use Pg::Loader::Log;
 use Data::Dumper;
 use Log::Log4perl  qw( :easy );
 use strict;
@@ -13,14 +14,15 @@ use warnings;
 our $VERSION = '0.01';
 
 my $conf = fetch_options();
-#l4p_config( $conf );
 
 
 my $ini  = ini_conf    $conf->{config} ;
 error_check_pgsql( $conf, $ini );
+l4p_config( $conf);
+my $l = get_logger('Pg::Loader');
+$l->info( "Configuration from $conf->{config}" );
 
 my $dh   = connect_db  $ini->{pgsql};
-
 show_sections($conf, $ini)  unless @ARGV;
 
 ## MAIN
@@ -29,18 +31,12 @@ my @stats;
 for  ( @ARGV ) {
         add_defaults( $ini, $_ )  ;
         # setup per-section logging
-        l4p_config( $conf, @{$ini->{$_}}{qw( reject_data reject_log )});
 	
         # update, or load table
         $ini->{$_}{mode} eq 'update'
                 ? (push @stats,    update_loader( $conf, $ini, $dh , $_))
-                : (push @stats,    copy_loader( $conf, $ini, $dh , $_))  ;
+                : (push @stats,    copy_loader(   $conf, $ini, $dh , $_))  ;
 
-	# remove files that are empty
-        #my $reject_log  =  $ini->{$_}{reject_log} ||''  ;
-        #my $reject_data =  $ini->{$_}{reject_data}||''  ;
-	#unlink $reject_log  if -f $reject_log  && -e _ && $reject_log ;
-	#unlink $reject_data if -f $reject_data && -e _ && $reject_data ;
 };
 
 print_results( @stats)  if $conf->{summary};
@@ -184,14 +180,10 @@ update_copy           [ OPTIONAL ]    Names of columns for the update mode.
                       The format and semantics are identical to "copy_columns".
 
 reject_data           [ OPTIONAL ]    Specifies the pathname for the file
-                      that records rejected data. Default is STDOUT .
-                      Output is enabled by the default or a more permissive
-                      logging level.
+                      to record rejected data. 
 
 reject_log            [ OPTIONAL ]    Specifies the pathname for the file
-                      that records diagnostics. Default is STDERR .
-                      Output is enabled by the default or a more permissive
-                      logging level.
+                      to record diagnostics.
 
 only_cols             [ OPTIONAL ]    Same purpose as "copy_columns", but here
                       we use numbers (instead of names), to specify the

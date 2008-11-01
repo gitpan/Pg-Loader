@@ -8,11 +8,12 @@ use Data::Dumper;
 use strict;
 use warnings;
 use Config::Format::Ini;
+use Log::Log4perl ':easy';
 use Text::CSV;
 use Pg::Loader::Columns;
 use Pg::Loader::Query;
+use Pg::Loader::Log;
 use List::MoreUtils  qw( firstidx );
-use Log::Log4perl  qw( :easy );
 use base 'Exporter';
 use Quantum::Superpositions ;
 use Text::Table;
@@ -25,7 +26,7 @@ our $VERSION = '0.12';
 our @EXPORT = qw(
 	ini_conf	error_check   	fetch_options   show_sections
 	usage		version		merge_with_template 
-	print_results	l4p_config	add_defaults    subset
+	print_results	add_defaults    subset
 	error_check_pgsql               filter_ini      reformat_values
 	add_modules     pk4updates      
 	insert_semantic_check           update_semantic_check
@@ -91,38 +92,9 @@ sub  gen {
 	#lc_time=POSIX
 
 EOM
-	print $tmp; exit;
+	say $tmp; exit;
 }
 
-sub l4p_config {
-	my ($c, $rej_data, $rej_log)     =  @_ ;
-	$c->{loglevel} //= 2;
-        $c->{loglevel} < 1  and $c->{loglevel} = 1;
-        $c->{loglevel} > 4  and $c->{loglevel} = 4;
-        $c->{verbose}       and $c->{loglevel} = 3;
-        $c->{debug}         and $c->{loglevel} = 4;
-        $c->{quiet}         and $c->{loglevel} = 1;
-	my $level = (5-$c->{loglevel})*10_000 ;
-
-	Log::Log4perl->easy_init( { level      =>  $level//$INFO             ,
-				    file       =>   $rej_data|| 'STDERR'     ,
-				    category   =>  'Pg::Loader::Log'         ,
-				    layout     =>  '%x'                      ,
-				    #additivity =>  0                        ,
-				   }, 
-                                   { level      =>  $level//$INFO            ,
-				     file       =>  $c->{Logfile} ||'STDOUT' ,
-				     category   =>  ''                       ,
-				     layout     =>  '%m%n'                   ,
-				   },
-                                   { level      =>  $level//$INFO            ,
-				     file       =>  $rej_log || 'STDERR'     ,
-				     category   =>  'rej_log'                ,
-				     layout     =>  '%m%n'                   ,
-				     additivity =>  0                        ,
-				   },
-	);
-}
 
 
 sub ini_conf {
@@ -137,12 +109,12 @@ sub version { say 'pgloader.pl version '. $VERSION    and exit }
 
 
 sub print_results {
-        my @stats = shift || return;
+        my @stats = @_ or return;
         printf "%-17s | %11s | %7s | %10s | %10s\n",
-                'section name', 'duration', 'size', 'copy rows', 'errors';
-        say '='x 68;
-        printf "%-17s | %10.3fs | %7s | %10d | %10s\n" ,
-        @{$_}{qw( name elapsed size rows errors)}  for @stats;
+                'section name', 'duration', 'size', 'affected rows', 'errors';
+        say '='x 70;
+        printf "%-17s | %10.3fs | %7s | %13d | %10s\n" ,
+		@{$_}{qw( name elapsed size rows errors)}  for @stats;
 }
 
 sub merge_with_template {
@@ -236,13 +208,20 @@ sub _switch_2_update {
 		$s->{ copy_only    } && $s->{ update_columns }  and die;
 		$s->{ copy_only    } && $s->{ update_only    }  and die;
 	1;
-	} or  LOGEXIT  qq(Cannot mix "copy" with "update" columns) ;
-	# Determine if you should switch to update
-	$s->{ update        } and $s->{ copy         } = $s->{ update         };
-	$s->{ update_columns} and $s->{ copy_columns } = $s->{ update_columns };
-	$s->{ update_only   } and $s->{ copy_only    } = $s->{ update_only    };
-	exists $s->{ update }  ? ( $s->{ mode } = 'update' )
-		 	       : ( $s->{ mode } = 'copy'   );
+	} or  LOGDIE  qq(\tCannot mix "copy" with "update" columns) ;
+	#TODO "update_only" should populate "update_columns"
+	$s->{ update_only } and  LOGDIE qq(\t"update_only" not implemeted");
+	# Should we switch to update mode ?
+	exists $s->{ update_columns }  and  $s->{mode}='update';
+        exists $s->{ update_only }     and  $s->{mode}='update';
+        exists $s->{ update }          and  $s->{mode}='update';
+        ## key statement
+	$s->{mode} //= 'copy' ;
+	if ($s->{mode} eq 'update') {
+		$s->{copy_columns} = $s->{update_columns}//$s->{update};
+		$s->{copy_only}    = $s->{update_columns}//'';
+	}
+	
 }
 sub  pk4updates {
 	## ensure that table has pk
@@ -250,21 +229,19 @@ sub  pk4updates {
 	my ($dh, $s) = @_ ;
 	my $table = $s->{table};
         $s->{pk}  =  Pg::Loader::Query::primary_keys($dh, $table);
-	my $msg   = qq(Table $table does not contain pk. Aborting...);
-	LOGEXIT( $msg )  unless @{$s->{pk}} ;
+	@{$s->{pk}} ;
 }
 sub update_semantic_check {
         my $s = shift;
 	# ensure "copy_columns" is an arrayref
-        my $msg = qq("update_columns" or "update_only" cannot) .
-                  qq( contain primary keys);
+        my $msg = qq(\t"update_columns" cannot contain primary keys);
 	for my $pk (@{$s->{pk}}) {
-        	grep   { /^$pk$/ } @{$s->{copy_columns}}  and LOGEXIT( $msg ); 
+        	grep   { /^$pk$/ } @{$s->{copy_columns}}  and LOGDIE( $msg ); 
 	}
-        $msg = qq("copy" must include the primary keys);
-        subset( $s->{copy}, $s->{pk} )          or  LOGEXIT(  $msg );
-        $msg = qq(Config implies that no columns should be updated);
-	( @{$s->{copy}}  == @{$s->{pk}} )  and LOGEXIT( $msg );
+        $msg = qq(\t"update" must include the primary keys);
+        subset( $s->{copy}, $s->{pk} )          or  LOGDIE(  $msg );
+        $msg = qq(\tConfig implies that no columns should be updated);
+	( @{$s->{copy}}  == @{$s->{pk}} )  and LOGDIE( $msg );
 	#TODO: what is updated must be in the "copy" list
 }
 sub _check_copy_grammar {
@@ -386,8 +363,6 @@ sub add_modules {
 		LOGEXIT  qq(could not find "${pack}::$fun") 
                                     unless  UNIVERSAL::can( $pack, $fun );
 		$h->{ref} = 1   ;# cludge fix
-	#	$h->{ref} = UNIVERSAL::can( $pack, $fun );
-	#	$h->{ref} or LOGEXIT  qq(could not find "${pack}::$fun")  ;
 	}
 }
 

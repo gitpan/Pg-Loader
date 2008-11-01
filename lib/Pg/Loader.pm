@@ -21,7 +21,7 @@ use base 'Exporter';
 use SQL::Abstract;
 use Storable qw( dclone );
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 our @EXPORT = qw( copy_loader  update_loader );
 
@@ -30,19 +30,31 @@ sub _stop_input {
 	my ($conf, $rows) = @_ ;
 	($rows//0) >= ($conf->{count} // '1E10')   ;
 }
-
+sub no_pk_found {
+	my  ($ini,$section) = @_ ;
+	my  $s = $ini->{$section};
+	my $msg   = qq(\tTable $s->{table} )
+	    . q(does not contain pk. Skipping...);
+	WARN( $msg ) ;
+	{    name => $section,  elapsed => 0,
+	     rows => 0,         errors  => 'no pk',
+	     size => $s->{copy_every},
+	}
+}
 sub update_loader {
 	my ( $conf, $ini, $dh, $section ) = @_                 ;
 	my   $s    =  $ini->{$section}                         ;
 	my   $dry  =  $conf->{dry}                             ;
 
-	INFO("Processing [$section]")                          ;
+	INFO("UPDATE, as per  [$section]")                     ;
         $ini->{$section}{table}      = $conf->{relation} if $conf->{relation} ;
         $ini->{$section}{copy_every} = 1                 if $conf->{every}    ;
 	error_check(      $ini, $section        )                             ;
 	filter_ini(       $ini->{$section}, $dh )                             ;
-	pk4updates($dh, $ini->{$section})          ;
-	update_semantic_check(  $ini->{$section} ) ;
+	pk4updates($dh, $ini->{$section}) or return no_pk_found($ini,$section);
+ 	eval { update_semantic_check(  $ini->{$section} ) ; 1 
+             } or return { name=>$section, elapsed=>0, 
+                    rows=>0, errors=>'config', size=>$s->{copy_every} };
 	reformat_values(  $ini->{$section}, $dh )              ;
 	add_modules(      $ini->{$section}, $dh )              ;
 
@@ -87,7 +99,7 @@ sub copy_loader {
 	my ( $conf, $ini, $dh, $section ) = @_                 ;
 	my   $s    =  $ini->{$section}                         ;
 	my   $dry  =  $conf->{dry}                             ;
-	INFO("Processing [$section]")                          ;
+	INFO("COPY, as per [$section]")                        ;
         $ini->{$section}{table}      = $conf->{relation} if $conf->{relation} ;
         $ini->{$section}{copy_every} = 1                 if $conf->{every}    ;
 	error_check(      $ini, $section        )                             ;
@@ -102,11 +114,11 @@ sub copy_loader {
 sub load_2table {
 	my ( $conf, $ini, $dh, $section ) = @_                ;
 	my  $s = $ini->{$section}                             ;
-	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} );
+	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} )   ;
 	my ($file, $format, $null, $table) = 
                     @{$s}{'filename','format','null','table'} ;
 	my ($col, @col) = requested_cols( $s )                ;
-	INFO("\tReading from $file")                          ;
+	INFO("\tData from $file")                             ;
 	my $fd  = \* STDIN                                    ;
 	open $fd, $file           unless  $file=~/^STDIN$/i   ;
 	my $csv = init_csv( $s )                              ;
@@ -122,7 +134,8 @@ sub load_2table {
 	my ( $rows, $total, $errors); 
 
 	while ( $data ) {
-	        ($rows,$data) = insert($s, $dh, $col, $csv, $fd, $conf, @col);
+	        ($rows,$data) = insert($s, $dh, $col, $csv, 
+                                  $fd, $section, $conf, @col );
 		$rows > 0 ?  ($total+=$rows) : ($errors+=-$rows)             ;
 	        last unless $data                                            ;
 	        last if _stop_input($conf, $rows//0)                         ;
@@ -138,7 +151,7 @@ sub load_2table {
 
 
 sub insert {
-	my ($s, $dh, $col, $csv, $fd, $conf, @col ) = @_;
+	my ($s, $dh, $col, $csv, $fd, $section, $conf, @col ) = @_;
 	my ( $format, $null, $table) = @{$s}{'format','null','table'};
 	my ($dry , $r )= ( $conf->{dry}, $s->{copy_every} );
 
@@ -151,8 +164,11 @@ sub insert {
 	DEBUG( "\t\t$sql" )                                   ;
 	$dh->do( $sql )  if (! $dry)                          ;
 
+	## Initialize $dh, and NDC
         local $dh->{ PrintError } = 0 ; 
 	local $dh->{ RaiseError } = 1 ;
+        $Log::Log4perl::NDC = $s->{copy_every};
+	Log::Log4perl::NDC->remove ;
 
 	my ($rows, $data) ;
 	while ( $r -- ) {
@@ -171,8 +187,8 @@ sub insert {
 		Log::Log4perl::NDC->remove;
 		1;
 	} || do {
-		REJECTLOG( $dh->errstr );
-		Pg::Loader::Log::del_stack()  if $s->{ reject_data };
+		log_rejected_data( $s, $section );
+		log_reject_errors( $s, $dh->errstr, $section );
 		$dh->pg_rollback_to("every_block");
 		return (-$rows//0, $data);
 	};

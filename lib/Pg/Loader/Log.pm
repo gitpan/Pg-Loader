@@ -6,27 +6,106 @@ package Pg::Loader::Log;
 
 use v5.10;
 use Data::Dumper;
+use Log::Log4perl qw( :easy );
+use Log::Log4perl::Layout;
+use Log::Log4perl::Level;
 use strict;
 use warnings;
 use base 'Exporter';
-use Log::Log4perl qw( :easy );
 
 our $VERSION = '0.12';
 our @EXPORT = qw(
-	      REJECTLOG   del_stack
+              l4p_config                _main_logger
+	      log_rejected_data         log_reject_errors
 );
 
-
-my $l = get_logger('rej_log');
-
-sub REJECTLOG {
-	$l->info( $_[0] ) if $_[0];
+sub l4p_config {
+        my ($c, $rej_data, $rej_log)     =  @_ ;
+        $c->{loglevel} //= 2;
+        $c->{loglevel} < 1  and $c->{loglevel} = 1;
+        $c->{loglevel} > 4  and $c->{loglevel} = 4;
+        $c->{verbose}       and $c->{loglevel} = 3;
+        $c->{debug}         and $c->{loglevel} = 4;
+        $c->{quiet}         and $c->{loglevel} = 1;
+        my $level = (5-$c->{loglevel})*10_000 ;
+        _main_logger() ->level( $level//$INFO ); 
 }
 
-sub del_stack {
- 	INFO  ;
+sub _main_logger {
+	my $main     = get_logger('Pg::Loader');
+	my $layout   = Log::Log4perl::Layout::PatternLayout->new( '%m%n' ); 
+	my $appender = Log::Log4perl::Appender->new( 
+                                             'Log::Log4perl::Appender::File',
+                                              mode      => 'append',
+                                              name      => 'stdio',
+                                              filename  => '/dev/stderr');
+           # config logger
+           $appender->layout( $layout );
+           $main->add_appender( $appender);
+	   $main;
+}
+
+sub  _stack_logger {
+	my ($file, $mode, $pattern)  =  @_ ;
+	return unless $file || $mode ;
+	$pattern //= '%m%n'; 
+
+        ### Set each logger to a different name
+	state $name++;
+	my $l        = get_logger( $name );
+	my $layout   = Log::Log4perl::Layout::PatternLayout->new( $pattern ); 
+	my $appender = new Log::Log4perl::Appender
+                                             'Log::Log4perl::Appender::File',
+                                              mode            =>  $mode  ,
+                                              filename        =>  $file  ,
+                                              recreate        =>  0,
+                                              recreate_signal => 'USR1';
+                                                
+       ### Config Logger
+       $appender->layout( $layout );
+       $l->add_appender( $appender);
+       $l->level( $INFO );
+       $l;
+}
+
+
+sub  log_reject_errors {
+	my ( $s, $errstr, $section ) = @_;
+	return unless  $s->{reject_log};
+	my $file = $s->{reject_log};
+	state  $last_section ;
+	$last_section //= 'new';
+	my $l;
+	if ( $last_section ne $section ) {
+		$last_section = $section;
+		$l = _stack_logger ($file, 'clobber', '%m%n') ;
+	}else{
+		$l = _stack_logger ($file, 'append', '%m%n' ) ;
+	};
+	$l->info( $errstr ) ;
+}
+
+
+
+sub  log_rejected_data {
+	# Error Checking
+	my ( $s,  $section) = @_ ;
+	return unless $s->{reject_data};
+	my $file = $s->{reject_data};
+ 	return unless Log::Log4perl::NDC->get();
+	state  $last_section ;
+	$last_section //= 'new';
+	my $l;
+	if ( $last_section ne $section ) {
+		$last_section = $section;
+		$l = _stack_logger ($file, 'clobber', ' %x%n') ;
+	}else{
+		$l = _stack_logger ($file, 'append' , ' %x%n') ;
+	};
+	$l->info(  ) ;
  	Log::Log4perl::NDC->remove;
 }
+
 
 1;
 __END__
