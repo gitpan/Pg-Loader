@@ -1,5 +1,8 @@
 Revision history for Perl extension Pg::Loader.
 
+0.14  Sat Nov 1 07:43:24 2008
+	- Fixed irritagin undef
+
 0.13  Fri Oct 31 23:33:44 2008
 	- This a bug-fix release
 	- Saner behavior for "reject_log" and "reject_data": files are

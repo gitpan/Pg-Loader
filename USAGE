@@ -120,14 +120,10 @@ update_copy           [ OPTIONAL ]    Names of columns for the update mode.
                       The format and semantics are identical to "copy_columns".
 
 reject_data           [ OPTIONAL ]    Specifies the pathname for the file
-                      that records rejected data. Default is STDOUT .
-                      Output is enabled by the default or a more permissive
-                      logging level.
+                      that records rejected data. 
 
 reject_log            [ OPTIONAL ]    Specifies the pathname for the file
-                      that records diagnostics. Default is STDERR .
-                      Output is enabled by the default or a more permissive
-                      logging level.
+                      that records diagnostics. 
 
 
 

@@ -11,7 +11,7 @@ use Log::Log4perl  qw( :easy );
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.14';
 
 my $conf = fetch_options();
 
@@ -20,7 +20,7 @@ my $ini  = ini_conf    $conf->{config} ;
 error_check_pgsql( $conf, $ini );
 l4p_config( $conf);
 my $l = get_logger('Pg::Loader');
-$l->info( "Configuration from $conf->{config}" );
+$l->info( 'Configuration from ' . ($conf->{config}//='pgloader.conf') );
 
 my $dh   = connect_db  $ini->{pgsql};
 show_sections($conf, $ini)  unless @ARGV;
