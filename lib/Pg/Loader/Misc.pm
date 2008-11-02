@@ -211,7 +211,7 @@ sub _switch_2_update {
 	} or  LOGDIE  qq(\tCannot mix "copy" with "update" columns) ;
 	#TODO "update_only" should populate "update_columns"
 	$s->{ update_only } and  LOGDIE qq(\t"update_only" not implemeted");
-	# Should we switch to update mode ?
+	# Should we switch to update mode?
 	exists $s->{ update_columns }  and  $s->{mode}='update';
         exists $s->{ update_only }     and  $s->{mode}='update';
         exists $s->{ update }          and  $s->{mode}='update';
@@ -220,6 +220,7 @@ sub _switch_2_update {
 	if ($s->{mode} eq 'update') {
 		$s->{copy_columns} = $s->{update_columns}//$s->{update};
 		$s->{copy_only}    = $s->{update_columns}//'';
+		$s->{copy}         = $s->{update};
 	}
 	$s->{mode};
 }

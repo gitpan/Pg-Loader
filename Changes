@@ -1,5 +1,8 @@
 Revision history for Perl extension Pg::Loader.
 
+0.16  Sun Nov  2 10:14:44 2008
+	- Fixed a critical a bug in update mode
+
 0.15  Sun Nov  2 05:10:09 2008
 	- More regression test
 

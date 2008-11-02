@@ -36,6 +36,8 @@ $s = { update=>1, update_columns=>1 }   ; lives_ok { switch_2_update( $s ) };
 $s = { update_columns=> 'fa' }   ; 
 switch_2_update( $s ) ;
 is $s->{copy_columns} , $s->{update_columns} ; 
+$s = { update=> 'fa' }   ; switch_2_update( $s ) ;
+is $s->{copy} , $s->{update} ; 
 
 exit;
 TODO: {
@@ -49,6 +51,3 @@ TODO: {
 
 
 
-##  not sure  if this needs to be implemented
-$s = { update=> 'fa' }   ; switch_2_update( $s ) ;
-is $s->{copy} , $s->{update} ; 
