@@ -22,6 +22,11 @@ my $b= Module::Build->new(
                                 'Quantum::Superpositions' => '2.02',
                               #},
         #recommends         => { 
+				Test::HasVersion      =>  '0.012',
+				Test::Dependencies    =>  '0.11',
+				Test::MinimumVersion  =>  '0.008',
+				Test::CPAN::Meta      =>  '0.12',
+
 				'Test::Pod'           =>  1.0,
                                 'Test::Pod::Coverage' => '1.0',
                                 'Test::MockDBI'       => '0.61',

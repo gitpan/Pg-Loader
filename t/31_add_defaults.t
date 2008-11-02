@@ -48,7 +48,6 @@ is   $mm->{ null }  ,  '$$\NA$$' ;
 is   $ss->{ null }  ,  '$$na$$'  ;
 
 
-#exit
 # the following fail because they exit(1) instead of die()
 #dies_ok { add_defaults ( $s, 'appl') };
 #dies_ok { add_defaults ( $s, '') };

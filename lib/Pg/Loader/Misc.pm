@@ -221,7 +221,7 @@ sub _switch_2_update {
 		$s->{copy_columns} = $s->{update_columns}//$s->{update};
 		$s->{copy_only}    = $s->{update_columns}//'';
 	}
-	
+	$s->{mode};
 }
 sub  pk4updates {
 	## ensure that table has pk

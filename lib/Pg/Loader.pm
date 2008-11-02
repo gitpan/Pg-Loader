@@ -21,7 +21,7 @@ use base 'Exporter';
 use SQL::Abstract;
 use Storable qw( dclone );
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 our @EXPORT = qw( copy_loader  update_loader );
 
