@@ -66,7 +66,7 @@ CONFIGURATION FILE
                     to disable it.
 
     [person]
-        This is the table section. The name person was arbitrary choosen,
+        This is the table section. The name person was arbitrary chosen,
         you can define an unlimited number of table sections. If the name of
         a table section appears on the command line (when invoking
         pgloader.pl) the corresponding table section defines how to load

@@ -1,0 +1,15 @@
+use Test::More  'no_plan';
+
+eval ' use Test::Dependencies ';
+SKIP: {
+	skip 'Test::Dependencies not installed', 1    if $@;
+	push @_ , <../*.yml>, <*.yml>; 
+    ok_dependencies();
+}
+
+#chdir '..' ;
+#ok_dependencies();
+
+
+__END__
+

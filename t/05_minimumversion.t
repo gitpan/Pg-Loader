@@ -2,8 +2,8 @@ use Test::More  'no_plan';
 
 eval ' use Test::MinimumVersion ';
 
-my $version = '5.008';
-my $args = { paths => [qw( ../blib blib )] };
+my $version = '5.010';
+my $args = { paths => [qw( ../t t  ../blib blib )] };
 
 
 SKIP: {

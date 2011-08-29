@@ -1,21 +1,28 @@
 #!/usr/bin/env  perl
 
-use v5.10;
+use 5.010000;
 use lib qw( ../blib/lib ) ;
-use Pg::Loader;
-use Pg::Loader::Misc;
-use Pg::Loader::Query;
-use Pg::Loader::Log;
+use Pg::Loader::Options qw/ get_options /;
+use Pg::Loader          qw/ copy_loader  update_loader  /;
+use Pg::Loader::Query   qw/ connect_db  /;
+use Pg::Loader::Log     qw/ l4p_config    /;
+use Pg::Loader::Misc_2  qw/ sample_config show_sections add_defaults/;
+use Pg::Loader::Misc    qw/ error_check_pgsql print_results ini_conf/;
 use Data::Dumper;
-use Log::Log4perl  qw( :easy );
+use Log::Log4perl  	qw/ :easy /;
 use strict;
 use warnings;
 
-our $VERSION = '0.14';
+our $VERSION = '0.17';
 
-my $conf = fetch_options();
+my $o    = get_options;
+my $conf = $o->opts;
 
+############################# Options Processing
+$conf->{version} 	and 	say $VERSION 		and exit;
+$conf->{sample} 	and 	say sample_config 	and exit;
 
+############################# M A I N
 my $ini  = ini_conf    $conf->{config} ;
 error_check_pgsql( $conf, $ini );
 l4p_config( $conf);
@@ -44,10 +51,12 @@ print_results( @stats)  if $conf->{summary};
 END { $dh and $dh->disconnect }
 
 
+
+
 __END__
 =head1 NAME
 
-pgloader.pl - loads data to Postgres tables
+pgloader.pl - loads and updates data to Postgres tables
 
 =head1 SYNOPSIS
 
@@ -57,21 +66,17 @@ pgloader.pl - loads data to Postgres tables
 
 =head1 DESCRIPTION
 
-I<pgloader.pl> loads tables to a Postgres database. It is similar
-to the pgloader(1) python program, written by other authors. Data
+I<pgloader.pl> loads tables to a Postgres database. It is an enhanced
+version of the pgloader(1) python program, written by other authors. Data
 are read from the file specified in the configuration file (defaults
 to pgloader.dat).
 
-This version of pgloader exhibits the -i option which (when activated)
-drops all table indexes and recreates them again after COPY.  In case of
-errors, everything rolls back to the initial state. This version also
-allows the libpq 'service' database connection method.
-
-The configuration file and command options are almost identical to the
-python pythod pgloader(1) and is meant to be a drop-in replacement.
-Configuration entries are ignored for unimplemented features.
-The core functionality and many usefull features are already implemented;
-read further to find what is currently available.
+This version of pgloader exhibits the -i option which 
+drops all table indexes and recreates them again after COPY.  Loading
+is performed inside transactions, supports updates, and the libpq "service"
+connection method. It is meant to be a drop-in replacement to the 
+python pgloader(1), numerous additional CLI options, though some 
+non-core functionalities are not implemented .
 
 =head1 OPTIONS
 
@@ -94,52 +99,52 @@ read further to find what is currently available.
 =head1 CONFIGURATION FILE
 
 
-The configuration file (default is pgloader.conf), follows the ini
-configuration format, and is divided into these sections:
+The configuration file follows the ini configuration format 
+and is divided into these sections:
 
 =over
 
 =item [pgslq]
 
-This section is the only mandatory section, and defines how to
-access the database.
+This is the only mandatory section and defines
+database connection parameters.
 
- base           [required]  name of the database
- host           [optional]  hostname to connect. Default is 'localhost'
- port           [optional]  port number. Default is 5432
- user           [optional]  name of login user. Default is epid of user
+ base           [required]  name of database
+ host           [optional]  hostname to connect. (Defaults to localhost)
+ port           [optional]  port number. (Defaults to 5432)
+ user           [optional]  name of login user. (Defaults to user's epid) 
  pass           [optional]  user password. Not needed if using libpq defaults.
  pgsysconfdir   [optional]  dir for PGSYSCONFDIR
- service        mandatory only when pgsysconfdir ( or the enviromental
+ service        mandatory only when pgsysconfdir ( or when the enviromental
                 variable PGSYSCONFDIR ) is defined .
 
 =item [template1]
 
-This section defines templates. In this case, the name was arbitrary
-chosen as B<template1>. The purpose of templates is to hold default
-values for other table sections (defined bellow).  You may define an
-unlimited number of template sections.  The only mandatory entry
-for this section is 'template':
+This section defines a I<template>. In this example, the name  B<template1> 
+was chosen as the name for the template. Templates are 
+optional and hold default values for I<table sections> (defined bellow).  
+You may define zero or unlimited number of templates. A template must
+contain the entry 'template', plus any entry allowed in table sections.
 
- template   when defined, the template as enabled; leave it blank
-            to disable it.
-
+ template   when defined to any true value, the template as enabled; 
+            leave it blank to ignore all entries of the template 
 
 
 =item [person]
 
-This is the table section. The name B<person> was arbitrary choosen,
-you can define an unlimited number of table sections.  If the name of a
-table section appears on the command line (when invoking pgloader.pl)
-the corresponding table section defines how to load this table.
-Try to keep the name of the section the same as the name of the table.
-In a table section you can define the following parameters:
+A I<table section> controls all aspects of data loading.
+When invoking pgloader.pl
+from the command line, you must specify which section 
+pgloader should read 
+so the corresponding table section can take effect.
+Here, The name B<person> was arbitrary chosen.
+In a table section you can control loading with the following parameters:
 
  table                [ MANDATORY ]  Tablename or schema.tablename .
                       Defaults to section name.
 
- filename             [ OPTIONAL ]  Filename with data for the table
-                      If missing, or set to 'STDIN', input data should
+ filename             [ OPTIONAL ]  Filename containing data for the table
+                      If unspecified, or set to 'STDIN', input data should
                       arrive from standard input.
 
  use_template         [ OPTIONAL ]   Template to use for default values.
@@ -159,13 +164,14 @@ In a table section you can define the following parameters:
                       Example:  copy = age, last, first
                                 copy = first:3, age:1, last:2
 
-copy_columns          [ OPTIONAL ]    Names of columns to use for COPY.
-                      The char '*' means all columns specified with
-                      the "copy" parameter; carefull, it does not mean
-                      all columns defined for the database table, for it
-                      would not make sence, much or little.  Default is '*',
-                      again, this means, same as "copy".  For this parameter,
-                      names need not obey a particular order.
+copy_columns          [ OPTIONAL ]    Which columns to copy.
+                      The char '*' (the default) means all columns specified 
+                      using the "copy" parameter; careful, it does not mean
+                      all columns defined for the table in database table, 
+                      pertains only to columns in the file and whose names
+                      were specified earlier with parameter copy.
+		      Again, it is about column names in data file.
+                      Names need not obey a particular order.
                       Example:  copy_columns = first, last, age
                                 copy_columns = *
 

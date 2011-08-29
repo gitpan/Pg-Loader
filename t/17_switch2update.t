@@ -1,8 +1,8 @@
-use Pg::Loader::Misc;
+use Pg::Loader::Misc_2;
 use Test::More qw( no_plan );
 use Test::Exception;
 
-*switch_2_update = \&Pg::Loader::Misc::_switch_2_update ;
+*switch_2_update = \&Pg::Loader::Misc_2::_switch_2_update ;
 
 my $s;
 

@@ -3,7 +3,7 @@
 
 package Pg::Loader::Columns;
 
-use v5.10;
+use 5.010000;
 use Data::Dumper;
 use strict;
 use warnings;
@@ -34,7 +34,8 @@ sub range2list {
 sub ranges2set {
         my @unit = (0..20);
         my $tmp = range2list( shift||return) ;
-        { $[=0; no warnings; %_= map { ($_=>undef)} eval ' @unit['.$tmp.']' }
+        {  no warnings 'deprecated';
+	  $[=0; no warnings; %_= map { ($_=>undef)} eval ' @unit['.$tmp.']' }
         [ sort keys %_ ];
 }
 
@@ -162,3 +163,4 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+

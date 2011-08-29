@@ -1,9 +1,10 @@
-use Pg::Loader::Misc;
+use Pg::Loader::Misc_2 qw/ add_defaults /;
+use Pg::Loader::Misc qw/ subset  /;
 use Test::More qw( no_plan );
 use Test::Exception;
 
 
-*add_defaults = \& Pg::Loader::Misc::add_defaults ;
+*add_defaults = \& Pg::Loader::Misc_2::add_defaults ;
 *subset       = \& Pg::Loader::Misc::subset       ;
 
 my $m = { apple  => {  } };

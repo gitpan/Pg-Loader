@@ -7,7 +7,7 @@ package main;
 use Pg::Loader::Columns;
 use Test::More qw( no_plan );
 use Test::Exception;
-use v5.10;
+use v5.8;
 
 *combine  = \&Pg::Loader::Columns::combine  ;
 *init_csv = \&Pg::Loader::Columns::init_csv ;

@@ -6,7 +6,7 @@
 #   05_minimumversion.t                                   07.strict.t
 #   10_simplify_ini.t           11_ini_conf.t             12_error_check.t
 #   13_subset.t                 14_check_copy_grammar.t   15_copy_param.t
-#   16_combine.t                17_switch2update.t
+#   16_combine.t                17_switch2update.t        18_sample.t
 #   20_disable_indexes.t        21_enable_indexes.t       22_stop_input.t
 #   24_sql_clause.t
 #   31_add_defaults.t           32_filter_ini.t
@@ -15,33 +15,59 @@
 #   55_field_nums_reqe.t        56_requested_cols.t       
  
 MODULES  =  -MData::Dumper -MCarp  
-MODULES +=  -MTest::More   -Mblib=../blib -Mv5.10 
+MODULES +=  -MTest::More   -Mblib=../blib -M5.010000
 
+vim = vi -p -c 'set nofoldenable'
 
-#all: 31_add_defaults.t
-all: 17_switch2update.t
+#new: 31_add_defaults.t
+#new: 05_minimumversion.t
+#new: 00_load.t
+#new: 00_load.t
+
+current = 00_load.t
+current = 01s_spelling.t
+current = 01c_coverage.t
+
+all: $(current)
+#all = prove
+prove:
+	prove  *t
 
 5* 4* 3* 2* 1* 0*:
 	perl -w -Mstrict -Mblib  $(MODULES)   $@  
+check_all:
+	../script/pgloader.pl       -c j.conf -TV  -si   exam   -d
+	../script/pgloader.pl -c u.conf exam -d
 cp:
 	cp  ../blib/lib/Pg/Loader.pm    ../lib/Pg
 	cp  ../blib/lib/Pg/Loader/*.pm  ../lib/Pg/Loader/
 w:
 	chmod -R u+w  ../blib/lib/Pg
-vil: w
-	vim  ../blib/lib/Pg/Loader.pm  
-viq: w
-	vim  ../blib/lib/Pg/Loader/Query.pm  
-vim: w
-	vim  ../blib/lib/Pg/Loader/Misc.pm  
-vic: w
-	vim  ../blib/lib/Pg/Loader/Columns.pm  
-vio: w
-	vim  ../blib/lib/Pg/Loader/Log.pm  
+lvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader.pm  
+qvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Query.pm  
+mvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Misc.pm  
+yvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Copy.pm  
+uvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Update.pm  
+mmvi: w
+	$(vim) $(current) ../blib/lib/Pg/Loader/Misc_2.pm  
+ovi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Options.pm  
+cvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Columns.pm  
+gvi: w
+	$(vim) $(current)  ../blib/lib/Pg/Loader/Log.pm  
 vi: w
-	vim  ../script/pgloader.pl
+	$(vim) $(current)  ../script/pgloader.pl
 pod:
 	perldoc ../script/pgloader.pl
 podl:
 	perldoc ../blib/lib/Pg/Loader.pm
-
+help:
+	echo podl pod gvi cvi ovi mmvi uvi yvi mvi qvi lvi test
+test:
+	make -sC .. test

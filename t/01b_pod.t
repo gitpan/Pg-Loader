@@ -2,16 +2,14 @@ use Test::More;
 
 
 my $dir  = $ENV{PWD} =~ m#\/t$#  ? '../' : '';
-my @files =   (    "${dir}blib/lib/Pg/Loader.pm" ,
-		   "${dir}script/pgloader.pl",
-);
-plan  tests=> scalar @files;
 
 eval 'use Test::Pod' ;
 
 
 SKIP: {        
-		skip  'no Test::Pod', scalar @files    if $@ ;
-		pod_file_ok( $_,  $_)   for @files;
+		skip  'no Test::Pod', scalar 1    if $@ ;
+	    my @files =   all_pod_files( "${dir}blib" );
+		pod_file_ok( $_, )   for @files;
+		done_testing( scalar @files);
 };
 

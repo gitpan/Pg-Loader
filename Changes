@@ -1,5 +1,12 @@
 Revision history for Perl extension Pg::Loader.
 
+0.18  Sun Aug 29 01:05:01 2011
+       - Regular upkeep: changed installer, changed and added tests
+
+0.17  Mon May 10 06:16:13 2010
+	- using inc::Module::Install installer
+	- silenced 'deprecated' warning in Pg::Loader::Columns
+
 0.16  Sun Nov  2 10:14:44 2008
 	- Fixed a critical a bug in update mode
 

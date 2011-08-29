@@ -4,7 +4,7 @@
 
 package Pg::Loader::Log;
 
-use v5.10;
+use 5.010000;
 use Data::Dumper;
 use Log::Log4perl qw( :easy );
 use Log::Log4perl::Layout;
@@ -38,7 +38,7 @@ sub _main_logger {
                                              'Log::Log4perl::Appender::File',
                                               mode      => 'append',
                                               name      => 'stdio',
-                                              filename  => '/dev/stderr');
+                                              filename  => '/dev/tty');
            # config logger
            $appender->layout( $layout );
            $main->add_appender( $appender);
@@ -82,7 +82,7 @@ sub  log_reject_errors {
 	}else{
 		$l = _stack_logger ($file, 'append', '%m%n' ) ;
 	};
-	$l->info( $errstr ) ;
+	$l->info( $errstr )  if $errstr;
 }
 
 

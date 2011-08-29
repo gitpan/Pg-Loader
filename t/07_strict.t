@@ -1,7 +1,6 @@
 use Test::More  'no_plan';
 
 
-
 push @_ , <../blib*>, <blib*> ;
 
 my $strict  = eval ' use Test::Strict;    1'   ;

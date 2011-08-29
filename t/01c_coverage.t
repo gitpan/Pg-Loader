@@ -1,17 +1,15 @@
-use Test::More tests=> 1 ;
+use Test::More;
 
-eval "use Test::Pod::Coverage 1.00";
-plan skip_all => "Test::Pod::Coverage 1.00 required for POD coverage" if $@;
+my $dir  = $ENV{PWD} =~ m#\/t$#  ? '../' : '';
 
-#all_pod_coverage_ok();
-
-
-my $trustme = { trustme => [ 	qr/^.*$/  , 
-                           ],
+my $trustme = { trustme => [ qr/^inlinefiles$/  , qr/^open$/  , qr/^/ ,]
               };
 
-pod_coverage_ok( 'Pg::Loader', { trustme => [ 
-                                qr/^.*$/          , 
-			     	qr/^xs_content$/  ,
-]});
+eval 'use Test::Pod::Coverage' ;
 
+SKIP: {        
+        skip  'no Test::Pod::Coverage', scalar 1    if $@ ;
+		my @modules = all_modules( "${dir}blib"  );
+		pod_coverage_ok( $_, $trustme )  for  @modules;
+		done_testing( scalar @modules );
+};

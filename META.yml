@@ -1,32 +1,44 @@
---- #YAML:1.0
-name:                Pg-Loader
-version:             0.16
-abstract:            Perl extension for loading Postgres tables
-license:             perl
-author:              
-    - Ioannis Tambouras <ioannis@cpan.org>
-generated_by:        ExtUtils::MakeMaker version 6.42
-distribution_type:   module
-requires:     
-    Config::Format::Ini:           0.05
-    Data::Dumper:                  2.121_08
-    DBD::Pg:                       2.10.7
-    Getopt::Compact:               0.04
-    List::MoreUtils:               0.22
-    Log::Log4perl:                 1.16
-    Quantum::Superpositions:       2.02
-    Storable:                      2.18
-    Test::CPAN::Meta:              0.12
-    Test::Dependencies:            0.11
-    Test::Exception:               0.27
-    Test::HasVersion:              0.012
-    Test::MinimumVersion:          0.008
-    Test::MockDBI:                 0.61
-    Test::Pod:                     1.0
-    Test::Pod::Coverage:           1.0
-    Text::CSV:                     1.06
-    Text::Table:                   1.107
-    Time::HiRes:                   1.9711
+---
+abstract: 'Perl extension for loading and updating Postgres tables'
+author:
+  - 'Ioannis Tambouras, <ioannis@cpan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 6.42
+  Test::CPAN::Meta: 0.12
+  Test::Dependencies: 0.11
+  Test::Exception: 0.27
+  Test::HasVersion: 0.012
+  Test::MinimumVersion: 0.101080
+  Test::MockDBI: 0.61
+  Test::Pod: 1.0
+  Test::Pod::Coverage: 1.0
+  Test::Spelling: 0.15
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
+distribution_type: module
+generated_by: 'Module::Install version 1.01'
+license: perl
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Pg-Loader
+no_index:
+  directory:
+    - examples
+    - inc
+    - t
+requires:
+  Config::Format::Ini: 0.05
+  DBD::Pg: 2.10.7
+  Getopt::Compact: 0.04
+  List::MoreUtils: 0.22
+  Log::Log4perl: 1.16
+  Quantum::Superpositions: 2.02
+  Storable: 2.18
+  Text::CSV: 1.06
+  Text::Table: 1.107
+  Time::HiRes: 1.9711
+  perl: 5.10.0
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.18

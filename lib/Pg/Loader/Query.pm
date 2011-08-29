@@ -4,17 +4,17 @@
 
 package Pg::Loader::Query;
 
-use v5.10;
+use 5.010000;
 use DBI;
 use strict;
 use warnings;
-use base 'Exporter';
 use Config::Format::Ini;
 use Log::Log4perl qw( :easy );
 use Pg::Loader::Columns;
 use Pg::Loader::Misc;
 use Data::Dumper;
 use Text::CSV;
+use base 'Exporter';
 
 our $VERSION = '0.10';
 
