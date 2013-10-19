@@ -20,10 +20,6 @@ examples/exam_csv.dat
 examples/j.conf
 examples/j_com.dat
 examples/j_tab.dat
-examples/John/makefile
-examples/John/try.pl
-examples/John/Util.pm
-examples/log.pm
 examples/log/r_data
 examples/log/r_log
 examples/makefile

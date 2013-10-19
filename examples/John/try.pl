@@ -1,3 +1,0 @@
-use Util;
-
-print 'hi';

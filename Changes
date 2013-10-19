@@ -1,6 +1,6 @@
 Revision history for Perl extension Pg::Loader.
 
-0.19  Fri Oct 18 23:33:33 2013
+0.21  Fri Oct 18 23:33:33 2013
 	- Fixed test regarding DROM INDEX
 
 0.19  Sun Oct 16 20:34:11 2011
