@@ -16,7 +16,7 @@ use Data::Dumper;
 use Text::CSV;
 use base 'Exporter';
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 our @EXPORT = qw(
 	connect_db	  get_columns_names   primary_keys
@@ -109,15 +109,17 @@ sub disable_indexes {
 		WHERE relname      = @{[ $dh->quote($table) ]}
 		 and  nspname      = @{[ $dh->quote($schema) ]}
 
+
 	my  @definitions;
-	while ( my $idx = $st->fetchrow_hashref  ) {
-		my  $sql =  $idx->{pk}
-                       ? "ALTER table $table drop constraint $idx->{name}"
-                       : "DROP INDEX $idx->{name}"                          ;
+	#while ( my $idx = $st->fetchrow_hashref  ) {
+	while ( my $idx = $st->fetchrow_arrayref  ) {
+		my  $sql =  $idx->[1]
+                       ? "ALTER table $table drop constraint ".$idx->[0]
+                       : "DROP INDEX ".$idx->[0];
 		DEBUG( "\t\t$sql" )                                         ;
-		$dh->do( $sql )  and   INFO( "\t\tDisabled $idx->{name}")   ; 
+		$dh->do( $sql )  and   INFO( "\t\tDisabled ".$idx->[0])   ; 
 	 	push @definitions, 
-                   { name =>$idx->{name},def =>$idx->{def}, pk=>$idx->{pk} };
+                   { name =>$idx->[0],def =>$idx->[2], pk=>$idx->[1] };
 	}
 	\@definitions;
 }

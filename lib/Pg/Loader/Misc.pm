@@ -126,8 +126,8 @@ sub _check_copy_grammar {
 
 sub subset {
 	my ($h,$n) = @_ ;
-        # True if $n is subset of $h;
-        my @intersection = eigenstates(all( any(@$h), any(@$n) ));
+    # True if $n is subset of $h;
+    my @intersection = eigenstates(all( any(@$h), any(@$n) ));
 	(@intersection == @$n);
 }
 sub _copy_param {

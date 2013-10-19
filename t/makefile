@@ -19,14 +19,14 @@ MODULES +=  -MTest::More   -Mblib=../blib -M5.010000
 
 vim = vi -p -c 'set nofoldenable'
 
-#new: 31_add_defaults.t
-#new: 05_minimumversion.t
-#new: 00_load.t
-#new: 00_load.t
 
 current = 00_load.t
 current = 01s_spelling.t
 current = 01c_coverage.t
+current =  04_dependencies.t
+current =  10_legal.t
+current =  50_script_pl.t
+current =  20_disable_indexes.t 
 
 all: $(current)
 #all = prove

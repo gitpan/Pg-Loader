@@ -30,8 +30,10 @@ test_requires   'Test::Pod::Coverage'  =>  '1.0',
                 'Test::HasVersion'     =>  '0.012',
                 'Test::Dependencies'   =>  '0.11',
                 'Test::CPAN::Meta'     =>  '0.12',
+                'Expect'               =>  '1.21',
                 'Test::MinimumVersion' =>  '0.101080',
                 'Test::Spelling'       =>  '0.15',
+                'Test::Legal'          =>  '0.10',
 ;
 
 auto_install;

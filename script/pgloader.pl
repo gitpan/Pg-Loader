@@ -13,7 +13,7 @@ use Log::Log4perl  	qw/ :easy /;
 use strict;
 use warnings;
 
-our $VERSION = '0.17';
+our $VERSION = '0.19';
 
 my $o    = get_options;
 my $conf = $o->opts;

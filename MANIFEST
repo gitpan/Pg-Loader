@@ -45,10 +45,10 @@ lib/Pg/Loader/Misc_2.pm
 lib/Pg/Loader/Options.pm
 lib/Pg/Loader/Query.pm
 lib/Pg/Loader/Update.pm
+LICENSE
 Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
-META.yml
 README
 script/pgloader.pl
 t/.proverc
@@ -61,6 +61,8 @@ t/03_meta.t
 t/04_dependencies.t-
 t/05_minimumversion.t
 t/07_strict.t
+t/08_scripts.t
+t/10_legal.t
 t/11_ini_conf.t
 t/12_error_check.t
 t/13_subset.t
@@ -76,6 +78,7 @@ t/23_vacuum.t
 t/24_sql_clause.t
 t/31_add_defaults.t
 t/32_filter_ini.t
+t/50_script_pl.t
 t/52_range2list.t
 t/53_schema_name.t
 t/54_get_columns_names.t

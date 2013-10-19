@@ -10,7 +10,7 @@ use warnings;
 use Pg::Loader::Update qw/ update_loader /;
 use Pg::Loader::Copy   qw/ copy_loader   /;
 use base 'Exporter';
-our $VERSION = '0.18';
+our $VERSION = '0.20';
 
 our @EXPORT = qw( copy_loader  update_loader ) ;
 

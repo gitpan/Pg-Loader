@@ -7,8 +7,6 @@ use Test::Exception;
 
 my $dh   = DBI->connect('dbi:Mock:a');
 
-ok $dh;
-
 my $ans  = [ { name=>'n_pkey', pk=>1, def=>'alter table e add primary key(c)'}, 
              { name=>'bb'    , pk=>0, def=>'create index bb on exam(fn,ln)'  }, 
 ];
@@ -19,18 +17,15 @@ my $session = new DBD::Mock::Session
 	                    [ 'n_pkey', 1, 'alter table e add primary key(c)'],
 	                    [ 'bb'    , 0, 'create index bb on exam(fn,ln)'],
                           ],
-	     },
-        { statement => 'ALTER table exam drop constraint n_pkey', 
+	},
+    { statement => 'ALTER table exam drop constraint n_pkey', 
 	  results => [] 
-        },
-        { statement => 'DROP INDEX bb' ,
+    },
+    { statement => 'DROP INDEX bb' ,
 	  results => [] 
-        },
+    },
 ;
 
 $dh->{mock_session} = $session ;
-
 is_deeply  disable_indexes( $dh, 'public.exam' ), $ans;
-
-
 

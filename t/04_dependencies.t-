@@ -1,9 +1,9 @@
 use Test::More  'no_plan';
 
-eval ' use Test::Dependencies ';
+eval q( use Test::Dependencies exclude => ['Pg::Loader'] );
 SKIP: {
 	skip 'Test::Dependencies not installed', 1    if $@;
-	push @_ , <../*.yml>, <*.yml>; 
+	#push @_ , <../*.yml>, <*.yml>; 
     ok_dependencies();
 }
 

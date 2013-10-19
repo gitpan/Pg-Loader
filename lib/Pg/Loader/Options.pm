@@ -1,4 +1,5 @@
 package Pg::Loader::Options;
+# Copyright (C) 2011, Ioannis
 
 use Getopt::Compact;
 use warnings;
